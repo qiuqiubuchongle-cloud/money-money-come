@@ -1,0 +1,7 @@
+.env
+data/
+logs/
+*.ndjson
+*.log
+node_modules/
+.DS_Store

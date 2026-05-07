@@ -1,0 +1,15 @@
+{
+  "name": "money-money-come",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BSC smart money wallet profiling, grouping, curated export, and grouped buy alerts.",
+  "scripts": {
+    "import-wallets": "node scripts/import_gmgn_wallets.mjs",
+    "profiles": "node scripts/build_smart_wallet_profiles.mjs",
+    "wallet-report": "node scripts/report_smart_wallet.mjs",
+    "wallet-groups": "node scripts/report_smart_wallet_groups.mjs",
+    "export-curated": "node scripts/export_curated_wallets.mjs",
+    "monitor": "node scripts/monitor_bsc_signals.mjs",
+    "telegram-bridge": "node scripts/telegram_bridge.mjs"
+  }
+}
