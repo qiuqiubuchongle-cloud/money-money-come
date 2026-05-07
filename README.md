@@ -1,61 +1,154 @@
 # Money Money Come
 
-链上聪明钱画像 Skill，帮助 Agent 快速完成三件事：
+链上聪明钱画像与分组信号 Skill。
 
-1. 分析单个聪明钱地址的 PnL、交易习惯、链上行为，输出简洁地址质量报告
-2. 对一批聪明钱地址进行分组，并在同组多个高质量地址集中买入同一 meme 时推送 Telegram 信号
-3. 对大量地址进行排序、优化、剔除，导出近期活跃、稳定收益、质量较好的地址
+它不是一个只会转发地址动向的“提醒器”，而是一个会先帮你筛噪音、做画像、分组，再把真正值得看的集中买入行为推出来的 Agent 工作流。
+
+基于 OnchainOS 与 OKX 官方接口能力，`money-money-come` 主要解决三件事：
+
+1. 识别地址：分析单个聪明钱地址的收益、活跃度、交易节奏、偏好市值段与行为特征  
+2. 筛选地址：剔除长期休眠、低胜率、高亏损、噪音过大的钱包，保留更稳定的观察池  
+3. 生成信号：当同一正向分组中的多个高质量地址集中买入同一 meme 时，推送 Telegram 提醒  
+
+## 它适合谁
+
+- 手里已经收藏了一批聪明钱地址，但越来越难管理的人
+- 想把“地址收藏夹”升级成“结构化信号池”的扫链用户
+- 想让 Agent 帮自己做地址画像、分组、排序、提醒的人
+- 希望基于 OKX 官方链上数据做更稳妥分析，而不是只看零散截图和主观备注的人
+
+## 核心能力
+
+### 1. 地址质量报告
+
+当你给出某个地址时，Skill 会尽量基于 OKX 官方链上画像数据输出一份简洁报告，重点包括：
+
+- 近期开仓与交易频率
+- 已实现 PnL
+- 胜率与稳定性
+- 是否偏好小市值 meme
+- 是否属于安全信号池
+- 建议继续监控、降权观察还是剔除
+
+### 2. 聪明钱分组系统
+
+Skill 会根据地址画像把钱包归类到不同风格组，例如：
+
+- `10K盈利冠军`
+- `百倍金狗选手`
+- `热门土狗命中选手`
+- `信仰加仓选手`
+- `均衡侦察兵`
+- `高频交易菜鸡`
+- `休眠地址`
+
+这一步的目标不是“给地址起外号”，而是让后续信号提醒具备结构化语义。
+
+### 3. 安全信号池
+
+不是所有活跃地址都值得跟。
+
+`money-money-come` 会在原始分组基础上再做一层安全筛选，默认排除：
+
+- 高频但低质量的钱包
+- 已实现亏损很大且胜率偏低的钱包
+- 长期不活跃的钱包
+- 只会制造噪音、缺乏稳定性的热点追逐地址
+
+最终只让更稳的地址进入 `safeSignalPool`，减少提醒污染。
+
+### 4. 集中买入提醒
+
+真正的重点在这里。
+
+当同一正向分组内，多个高质量地址在时间窗口内集中买入同一 meme 代币时，Skill 会整理出一条更像“可读结论”的信号，而不是一堆原始成交明细。
+
+提醒内容可包含：
+
+- 分组名称
+- 触发钱包数量
+- 钱包列表
+- 代币名称与合约地址
+- 置信度 / 情绪倾向
+- 风险提示
 
 ## 安全默认值
 
-- 默认仅做分析、分组、提醒
-- 不默认执行自动交易
-- 热点但低胜率、高亏损的地址会被排除出安全信号池
-- 长期不活跃地址不会进入主监控池
+为了避免 Agent 过度激进，这个 Skill 默认遵守以下规则：
+
+- 默认只做分析、排序、分组、提醒
+- 默认不执行自动交易
+- 默认优先使用 `safeSignalPool`
+- 默认要求同组多地址共振，才升级为重点信号
+
+也就是说，它默认是一个“研究与提醒层”，不是一个会擅自开仓的黑盒机器人。
 
 ## 安装
-
-发布到 GitHub 后，用户可通过类似方式安装：
 
 ```bash
 npx skills add https://github.com/qiuqiubuchongle-cloud/money-money-come
 ```
 
+安装后重启 Codex / Agent，让新 Skill 生效。
+
 ## 配置
 
-复制 `.env.example` 为 `.env`，填入：
+复制 `.env.example` 为 `.env`，填写以下配置：
 
-- `OKX_API_KEY`
-- `OKX_SECRET_KEY`
-- `OKX_PASSPHRASE`
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CHAT_ID`
+```bash
+OKX_API_KEY=...
+OKX_SECRET_KEY=...
+OKX_PASSPHRASE=...
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+```
 
-然后执行：
+然后登录 OnchainOS：
 
 ```bash
 onchainos wallet login
 ```
 
+你也可以先检查状态：
+
+```bash
+onchainos wallet status
+onchainos market portfolio-supported-chains
+```
+
 ## 典型工作流
 
-### 1. 导入钱包地址
+### 1. 导入聪明钱地址
 
 ```bash
 npm run import-wallets -- examples/gmgn_wallets_input.example.json
 ```
 
-### 2. 构建画像
+### 2. 构建地址画像
 
 ```bash
 npm run profiles
 ```
 
-### 3. 生成分组与安全信号池
+输出：
+
+- `data/smart_wallet_profiles_bsc.json`
+
+### 3. 生成分组与信号池
 
 ```bash
 npm run wallet-groups
 ```
+
+输出：
+
+- `data/smart_wallet_groups_bsc.json`
+
+重点看：
+
+- `signalPool`
+- `safeSignalPool`
+- `excludedSignalPool`
 
 ### 4. 导出精品地址
 
@@ -63,27 +156,59 @@ npm run wallet-groups
 npm run export-curated
 ```
 
+输出：
+
+- `data/curated_smart_wallets_bsc.json`
+- `data/curated_smart_wallets_bsc.txt`
+
 ### 5. 分析单个地址
 
 ```bash
 npm run wallet-report -- 0x...
 ```
 
-## 输出文件
+### 6. 开启分组监控
 
-- `data/smart_wallet_profiles_bsc.json`
-- `data/smart_wallet_groups_bsc.json`
-- `data/curated_smart_wallets_bsc.json`
-- `data/curated_smart_wallets_bsc.txt`
+```bash
+npm run monitor
+```
 
-## 提醒逻辑
+## 输入格式
 
-强信号默认要求：
+支持 GMGN 风格的地址列表：
 
-- 来自 `safeSignalPool`
-- 同一正向组内至少 2 个地址
-- 在时间窗口内集中买入同一 token
+```json
+[
+  {
+    "address": "0x...",
+    "name": "optional",
+    "emoji": ""
+  }
+]
+```
+
+## 这个 Skill 最有价值的地方
+
+它不是帮你“多看几个地址”。
+
+它真正有价值的地方在于：
+
+- 帮你给一堆地址做结构化记忆
+- 帮你从杂乱收藏夹里筛出值得盯的地址
+- 帮你把原始链上动作压缩成分组化的情绪信号
+
+换句话说，它想做的是：
+
+**把聪明钱地址列表，变成一个可以持续迭代的个性化买入雷达。**
 
 ## 风险提示
 
-该 Skill 仅用于链上分析和提醒，不构成投资建议。任何自动化信号都需要用户自行复核流动性、风险标签和仓位管理。
+本 Skill 仅用于链上分析、信号整理与提醒，不构成投资建议。
+
+任何后续实盘动作，都建议额外复核：
+
+- 流动性
+- 合约风险
+- 持仓集中度
+- 代币叙事真实性
+- 仓位管理与止盈止损
