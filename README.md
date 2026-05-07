@@ -1,10 +1,34 @@
 # Money Money Come
 
-链上聪明钱画像与分组信号 Skill。
+> 让一堆零散的聪明钱地址，变成一个会自己筛选、分组、提醒的个性化买入雷达。
 
-它不是一个只会转发地址动向的“提醒器”，而是一个会先帮你筛噪音、做画像、分组，再把真正值得看的集中买入行为推出来的 Agent 工作流。
+`money-money-come` 是一个基于 **OnchainOS + OKX 官方链上画像能力** 构建的聪明钱分析 Skill。  
+它不是只会转发地址动向的提醒器，而是一个会先做画像、先筛噪音、再输出分组化信号的 Agent 工作流。
 
-基于 OnchainOS 与 OKX 官方接口能力，`money-money-come` 主要解决三件事：
+![Money Money Come Hero](./assets/hero-onchainos-dashboard.png)
+
+## 你会得到什么
+
+- **地址画像**：给任意聪明钱地址生成简洁质量报告，快速判断值不值得跟
+- **地址分组**：按收益、活跃度、交易习惯、meme 偏好做分类，不再靠手动备注记忆
+- **集中提醒**：当同组多个高质量地址集中买入同一 meme 时，推送更可读的 Telegram 信号
+
+## 一句话理解它的价值
+
+你给它一堆钱包地址，  
+它帮你把“收藏夹”整理成“信号系统”。
+
+## 安装
+
+```bash
+npx skills add https://github.com/qiuqiubuchongle-cloud/money-money-come
+```
+
+安装后重启 Codex / Agent，让新 Skill 生效。
+
+## 它在做什么
+
+基于 OnchainOS 与 OKX 官方接口能力，`money-money-come` 主要完成三步：
 
 1. 识别地址：分析单个聪明钱地址的收益、活跃度、交易节奏、偏好市值段与行为特征  
 2. 筛选地址：剔除长期休眠、低胜率、高亏损、噪音过大的钱包，保留更稳定的观察池  
@@ -82,14 +106,6 @@ Skill 会根据地址画像把钱包归类到不同风格组，例如：
 - 默认要求同组多地址共振，才升级为重点信号
 
 也就是说，它默认是一个“研究与提醒层”，不是一个会擅自开仓的黑盒机器人。
-
-## 安装
-
-```bash
-npx skills add https://github.com/qiuqiubuchongle-cloud/money-money-come
-```
-
-安装后重启 Codex / Agent，让新 Skill 生效。
 
 ## 配置
 
