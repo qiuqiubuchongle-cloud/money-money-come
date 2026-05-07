@@ -22,7 +22,7 @@ const recentBuysPath = process.env.SMART_WALLET_RECENT_BUYS_PATH || "data/smart_
 const outPath = process.env.SMART_WALLET_PROFILES_PATH || "data/smart_wallet_profiles_bsc.json";
 const metaPath = process.env.SMART_WALLET_META_PATH || "data/smart_wallet_meta.json";
 const okxChain = process.env.OKX_PROFILE_CHAIN || "bsc";
-const okxTimeFrameDays = String(process.env.OKX_PROFILE_TIME_FRAME_DAYS || "7");
+const okxTimeFrameDays = String(process.env.OKX_PROFILE_TIME_FRAME_DAYS || "3");
 const okxEnabled = process.env.OKX_PROFILE_ENABLED !== "0";
 const okxHistoryEnabled = process.env.OKX_PROFILE_HISTORY_ENABLED !== "0";
 const okxRecentPnlEnabled = process.env.OKX_PROFILE_RECENT_PNL_ENABLED !== "0";

@@ -53,7 +53,7 @@ const historyRes = runOkxData([
   "market", "portfolio-dex-history",
   "--address", walletArg,
   "--chain", okxChain,
-  "--begin", String(Date.now() - 7 * dayMs),
+  "--begin", String(Date.now() - Number(timeFrame) * dayMs),
   "--end", String(Date.now()),
 ], 25_000);
 

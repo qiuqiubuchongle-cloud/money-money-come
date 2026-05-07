@@ -132,6 +132,18 @@ onchainos wallet status
 onchainos market portfolio-supported-chains
 ```
 
+默认建议保留：
+
+```bash
+OKX_PROFILE_TIME_FRAME_DAYS=3
+GMGN_ENABLED=0
+BINANCE_MEME_RUSH_ENABLED=0
+BINANCE_TOKEN_INFO_ENABLED=0
+```
+
+也就是说，这个 Skill 的主流程默认只依赖 **OnchainOS + OKX 官方画像接口 + 你的地址列表**。  
+GMGN 和 Binance 在当前版本里属于可选增强层，不是跑通主流程的必需项。
+
 ## 典型工作流
 
 ### 1. 导入聪明钱地址
@@ -139,6 +151,9 @@ onchainos market portfolio-supported-chains
 ```bash
 npm run import-wallets -- examples/gmgn_wallets_input.example.json
 ```
+
+注意：仓库里的示例地址文件只是**输入格式示例**，不是筛选过的高质量聪明钱样本。  
+如果你直接拿示例地址跑，出现 `safeSignalPool = 0`、被分到“排除组 / 休眠组”都很正常，这不代表 Skill 无效，只代表你还没有导入真实地址池。
 
 ### 2. 构建地址画像
 
@@ -188,6 +203,14 @@ npm run wallet-report -- 0x...
 ```bash
 npm run monitor
 ```
+
+监控模式的默认定位是：
+
+- 读取你已经生成好的画像与分组文件
+- 基于 `safeSignalPool` 做分组集中买入提醒
+- 默认不要求 GMGN / Binance 一起参与
+
+如果后续你想把 GMGN / Binance 当成辅助确认源，再显式打开它们即可。
 
 ## 输入格式
 

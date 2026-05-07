@@ -21,6 +21,7 @@ This skill is for building and operating a BSC smart-money analysis workflow aro
 - Producing a concise single-wallet report
 - Building a safe signal pool for alerts
 - Preparing Telegram alert payloads for grouped concentration buys
+- Running a useful baseline workflow with OKX data only, while keeping GMGN / Binance as optional enhancers
 
 ## Safety Defaults
 
@@ -68,6 +69,13 @@ Input format should be GMGN-style:
 ]
 ```
 
+Important:
+
+- The bundled example file is only a format example
+- It is not a curated profitable wallet pack
+- If those example wallets produce `safeSignalPool = 0`, that does not mean the workflow is broken
+- The meaningful use case starts after the user imports their own real smart-money list
+
 ### 2. Build wallet profiles
 
 Use OKX official wallet market profile data whenever available:
@@ -79,6 +87,14 @@ npm run profiles
 This writes:
 
 - `data/smart_wallet_profiles_bsc.json`
+
+Default recommendation:
+
+```bash
+OKX_PROFILE_TIME_FRAME_DAYS=3
+```
+
+This skill should prefer `3` as the default lookback window because some addresses may return OKX `timeFrame param error` on wider windows.
 
 ### 3. Generate grouped output
 
@@ -143,6 +159,13 @@ TELEGRAM_PROXY=...
 
 The monitor should only send grouped alerts from the **safe signal pool**.
 
+GMGN / Binance data sources are optional enhancers. The baseline workflow should still be useful with:
+
+- wallet import
+- OKX profile generation
+- group generation
+- Telegram alerts from the safe pool
+
 ### 7. OKX API setup
 
 To use official OKX wallet profile data, the environment should provide:
@@ -172,6 +195,7 @@ If login or profile commands fail, the agent should first diagnose:
 - expired login
 - invalid API key
 - region / network access issues
+- unsuitable `OKX_PROFILE_TIME_FRAME_DAYS` value
 
 When walking the user through setup, read `references/setup-checklist.md`.
 
