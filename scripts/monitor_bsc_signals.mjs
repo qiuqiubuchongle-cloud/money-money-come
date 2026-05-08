@@ -1108,23 +1108,49 @@ function groupedProfileStats(event) {
       topCount = count;
     }
   }
+  const activeGroups = Object.entries(counts)
+    .filter(([, count]) => count > 0)
+    .map(([profile, count]) => ({
+      profile,
+      label: profileCn(profile),
+      count,
+      wallets: walletsByProfile[profile] || [],
+    }))
+    .sort((a, b) => b.count - a.count);
+  const qualifiedGroups = activeGroups.filter((row) => row.count >= minPrivateWallets);
+  const activeGroupCount = activeGroups.length;
+  const qualifiedGroupCount = qualifiedGroups.length;
+  const crossGroupCount = activeGroups.reduce((sum, row) => sum + row.count, 0);
   const sources = new Set(event.sources || [event.source]);
   const externalConfirm = ["okx", "gmgn_smartmoney", "gmgn_market", "gmgn_trending", "fourmeme", "binance_meme", "binance_topic"]
     .some((source) => sources.has(source));
   const triggerCount = profiles.length;
-  const signalLevel = topCount >= 3 || (topCount >= 2 && externalConfirm) ? "强信号"
+  const signalLevel = qualifiedGroupCount >= 2 ? "多组强信号"
+    : activeGroupCount >= 2 && topCount >= 2 ? "多组共振"
+    : topCount >= 3 || (topCount >= 2 && externalConfirm) ? "强信号"
     : topCount >= 2 ? "正式信号"
-      : triggerCount >= 1 ? "观察信号"
+      : activeGroupCount >= 2 && crossGroupCount >= minPrivateWallets ? "跨组观察"
+        : triggerCount >= 1 ? "观察信号"
         : "无信号";
+  const triggerMode = qualifiedGroupCount >= 2 ? "multi_group"
+    : topCount >= minPrivateWallets ? "same_group"
+      : activeGroupCount >= 2 ? "cross_group_observe"
+        : "observe";
 
   return {
     counts,
     walletsByProfile,
+    activeGroups,
+    qualifiedGroups,
+    activeGroupCount,
+    qualifiedGroupCount,
+    crossGroupCount,
     topProfile,
     topCount,
     triggerCount,
     externalConfirm,
     signalLevel,
+    triggerMode,
     qualifies: topCount >= 2,
   };
 }
@@ -1193,6 +1219,16 @@ function sentimentNarrative(event) {
   return `${group.label}｜${parts.join(" / ") || "无画像样本"}｜情绪分 ${group.score}`;
 }
 
+function groupedStatsNarrative(stats) {
+  if (!stats) return "暂无分组统计";
+  const groups = stats.activeGroups || [];
+  const text = groups.map((row) => `${row.label} ${row.count}`).join(" / ") || "暂无正向核心组";
+  if (stats.triggerMode === "multi_group") return `多组强共振｜${text}`;
+  if (stats.triggerMode === "same_group") return `${profileCn(stats.topProfile)} 同组共振 ${stats.topCount} 个｜${text}`;
+  if (stats.triggerMode === "cross_group_observe") return `跨组观察，未达同组阈值｜${text}`;
+  return `观察中｜${text}`;
+}
+
 function walletShortName(wallet, profileMap = new Map()) {
   const row = profileMap.get(String(wallet || "").toLowerCase());
   if (row?.walletName) return row.walletName;
@@ -1210,18 +1246,20 @@ function groupedSignalSummary(event) {
   const profiles = [...(event.smartWalletProfiles || [])].sort((a, b) => Number(b.reliabilityScore || 0) - Number(a.reliabilityScore || 0));
   const uniqueProfiles = new Set(profiles.map((row) => row.profile));
   const names = profiles.slice(0, 5).map((row) => walletShortName(row.walletAddress, smartWalletProfiles.byWallet));
-  const groupStats = groupedProfileStats(event);
+  const groupStats = event.groupedProfileStats || groupedProfileStats(event);
   return {
     uniqueGroupCount: uniqueProfiles.size,
     triggerCount: profiles.length,
     names,
     topProfile: groupStats.topProfile,
     topCount: groupStats.topCount,
+    groupStats,
   };
 }
 
 function telegramSignalMessage(event, trade) {
   const grouped = groupedSignalSummary(event);
+  const groupStats = grouped.groupStats || event.groupedProfileStats || groupedProfileStats(event);
   const groupLabel = grouped.topProfile ? profileCn(grouped.topProfile) : (event.sentimentGroup?.label || "中性观察");
   const sourceText = event.sources?.join(" + ") || event.source || "unknown";
   const namesText = grouped.names.join("、") || "n/a";
@@ -1229,7 +1267,7 @@ function telegramSignalMessage(event, trade) {
     `🚨 <b>BSC 分组信号</b>`,
     "",
     `🪙 <b>${escapeHtml(event.symbol || "UNKNOWN")}</b> ｜ ${escapeHtml(event.name || event.symbol || "UNKNOWN")}`,
-    `📌 <b>等级</b>：${escapeHtml(event.groupedProfileStats?.signalLevel || grouped.signalLevel || "正式信号")} ｜ ${escapeHtml(groupLabel)} ｜ 情绪分 ${escapeHtml(event.sentimentGroup?.score ?? "n/a")}`,
+    `📌 <b>等级</b>：${escapeHtml(groupStats.signalLevel || "正式信号")} ｜ ${escapeHtml(groupLabel)} ｜ 情绪分 ${escapeHtml(event.sentimentGroup?.score ?? "n/a")}`,
     `🔗 <b>合约</b>：<code>${escapeHtml(event.token)}</code>`,
     `📡 <b>来源</b>：${escapeHtml(sourceText)}`,
     "",
@@ -1240,8 +1278,10 @@ function telegramSignalMessage(event, trade) {
     "",
     `🧠 <b>聪明钱触发</b>`,
     `• 触发地址：<b>${escapeHtml(grouped.triggerCount)}</b> 个`,
+    `• 触发模式：<b>${escapeHtml(groupedStatsNarrative(groupStats))}</b>`,
     `• 核心同组：<b>${escapeHtml(grouped.topCount || 0)}</b> 个`,
-    `• 外部确认：${escapeHtml(event.groupedProfileStats?.externalConfirm ? "有" : "无")}`,
+    `• 多组参与：${escapeHtml(groupStats.activeGroupCount || 0)} 组，达标组 ${escapeHtml(groupStats.qualifiedGroupCount || 0)} 组`,
+    `• 外部确认：${escapeHtml(groupStats.externalConfirm ? "有" : "无")}`,
     `• 名单：${escapeHtml(namesText)}`,
   ];
 
