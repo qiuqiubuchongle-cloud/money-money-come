@@ -1,0 +1,100 @@
+<svg width="1536" height="864" viewBox="0 0 1536 864" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Money Money Come functional workflow</title>
+  <desc id="desc">A concise OnchainOS-style workflow diagram for wallet import, OKX profiling, scoring, grouping, and Telegram alerts.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1536" y2="864" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E1514"/>
+      <stop offset="0.58" stop-color="#121B20"/>
+      <stop offset="1" stop-color="#10131A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="206" y1="188" x2="1328" y2="682" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#79E6B0"/>
+      <stop offset="0.52" stop-color="#5CB7FF"/>
+      <stop offset="1" stop-color="#B7A6FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <rect width="1536" height="864" rx="0" fill="url(#bg)"/>
+  <rect x="64" y="58" width="1408" height="748" rx="28" fill="#111A1F" stroke="#26343A"/>
+  <rect x="96" y="92" width="1344" height="680" rx="20" fill="#121C22" stroke="#1F3036"/>
+
+  <text x="132" y="154" fill="#F2F7F4" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="760">Money Money Come</text>
+  <text x="132" y="198" fill="#9EB2B0" font-family="Inter, Arial, sans-serif" font-size="22">OnchainOS smart-money wallet profiling skill</text>
+
+  <g transform="translate(1090 120)">
+    <rect width="218" height="44" rx="22" fill="#18272A" stroke="#2D4446"/>
+    <circle cx="26" cy="22" r="8" fill="#79E6B0"/>
+    <text x="46" y="29" fill="#CFE6E0" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="650">Analysis only by default</text>
+  </g>
+
+  <path d="M248 430H1288" stroke="url(#accent)" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  <path d="M1280 430L1256 416V444L1280 430Z" fill="#B7A6FF"/>
+
+  <g filter="url(#shadow)" font-family="Inter, Arial, sans-serif">
+    <g transform="translate(142 290)">
+      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
+      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
+      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">1</text>
+      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">Import wallets</text>
+      <text x="22" y="152" fill="#A7BAB7" font-size="17">GMGN-style address list</text>
+      <text x="22" y="181" fill="#A7BAB7" font-size="17">names and notes optional</text>
+      <rect x="22" y="206" width="116" height="24" rx="12" fill="#23353A"/>
+      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">user supplied</text>
+    </g>
+
+    <g transform="translate(402 290)">
+      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
+      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
+      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">2</text>
+      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">OKX profile</text>
+      <text x="22" y="152" fill="#A7BAB7" font-size="17">PnL, win rate, activity</text>
+      <text x="22" y="181" fill="#A7BAB7" font-size="17">meme market-cap preference</text>
+      <rect x="22" y="206" width="128" height="24" rx="12" fill="#23353A"/>
+      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">official data</text>
+    </g>
+
+    <g transform="translate(662 290)">
+      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
+      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
+      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">3</text>
+      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">Value score</text>
+      <text x="22" y="152" fill="#A7BAB7" font-size="17">profitability, consistency</text>
+      <text x="22" y="181" fill="#A7BAB7" font-size="17">activity and copyability</text>
+      <rect x="22" y="206" width="138" height="24" rx="12" fill="#23353A"/>
+      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">core / watch</text>
+    </g>
+
+    <g transform="translate(922 290)">
+      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
+      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
+      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">4</text>
+      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">Group pool</text>
+      <text x="22" y="152" fill="#A7BAB7" font-size="17">hot narrative, early hunter</text>
+      <text x="22" y="181" fill="#A7BAB7" font-size="17">stable profit, conviction</text>
+      <rect x="22" y="206" width="134" height="24" rx="12" fill="#23353A"/>
+      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">safeSignalPool</text>
+    </g>
+
+    <g transform="translate(1182 290)">
+      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
+      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
+      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">5</text>
+      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">TG alert</text>
+      <text x="22" y="152" fill="#A7BAB7" font-size="17">same-group concentration</text>
+      <text x="22" y="181" fill="#A7BAB7" font-size="17">readable signal cards</text>
+      <rect x="22" y="206" width="126" height="24" rx="12" fill="#23353A"/>
+      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">human review</text>
+    </g>
+  </g>
+
+  <g transform="translate(132 626)" font-family="Inter, Arial, sans-serif">
+    <rect width="1272" height="86" rx="18" fill="#0F181D" stroke="#24363D"/>
+    <text x="28" y="35" fill="#E9F3F0" font-size="20" font-weight="720">Default signal rule</text>
+    <text x="28" y="64" fill="#9FB4B1" font-size="17">A formal alert requires multiple core wallets from the same positive group. External sources are optional confirmations, not required dependencies.</text>
+    <rect x="1026" y="24" width="206" height="38" rx="19" fill="#1B2B30" stroke="#355059"/>
+    <text x="1050" y="49" fill="#CFE6E0" font-size="15" font-weight="700">No auto trading</text>
+  </g>
+</svg>
