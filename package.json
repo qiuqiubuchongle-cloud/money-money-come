@@ -7,6 +7,7 @@
     "import-wallets": "node scripts/import_gmgn_wallets.mjs",
     "profiles": "node scripts/build_smart_wallet_profiles.mjs",
     "wallet-report": "node scripts/report_smart_wallet.mjs",
+    "wallet-report-tg": "node scripts/send_wallet_report_to_tg.mjs",
     "wallet-groups": "node scripts/report_smart_wallet_groups.mjs",
     "export-curated": "node scripts/export_curated_wallets.mjs",
     "monitor": "node scripts/monitor_bsc_signals.mjs",
