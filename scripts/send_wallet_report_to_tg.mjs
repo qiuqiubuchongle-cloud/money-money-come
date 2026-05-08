@@ -56,10 +56,51 @@ function fmtHours(value) {
   return `${(n / 24).toFixed(1)} 天前`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function shortAddress(address) {
+  const text = String(address || "");
+  if (text.length <= 14) return text;
+  return `${text.slice(0, 6)}...${text.slice(-4)}`;
+}
+
+function recommendation(report) {
+  const m = report.metrics || {};
+  const pnl = Number(m.totalRealizedPnlUsd || 0);
+  const winRate = Number(m.winRatePct || 0);
+  const reliability = Number(report.reliabilityScore || 0);
+  const activeHours = Number(m.latestTradeAgeHours || 9999);
+  if (reliability >= 80 && pnl > 5000 && activeHours <= 24) {
+    return "建议放入重点观察池；适合同组共振后触发提醒，不建议孤立盲跟。";
+  }
+  if (pnl > 0 && winRate >= 35 && activeHours <= 72) {
+    return "可以进入观察池；等待更多同组地址确认后再提高信号权重。";
+  }
+  if (activeHours > 336) {
+    return "近期活跃度偏低；建议暂时降权或放入休眠观察。";
+  }
+  return "建议先观察，不直接作为核心买入依据。";
+}
+
+function formatTokenRows(rows, positive) {
+  if (!rows.length) return "暂无";
+  const icon = positive ? "✅" : "⚠️";
+  return rows.map((row) => {
+    const symbol = escapeHtml(row.tokenSymbol || "UNKNOWN");
+    return `${icon} <b>${symbol}</b>  ${escapeHtml(fmtUsd(row.pnlUsd))}  (${escapeHtml(fmtPct(row.totalPnlPercent))})`;
+  }).join("\n");
+}
+
 function tgPayload(text) {
   return JSON.stringify({
     chat_id: chatId,
     text,
+    parse_mode: "HTML",
     disable_web_page_preview: true,
   });
 }
@@ -96,31 +137,37 @@ function buildText(report) {
   const m = report.metrics || {};
   const wins = Array.isArray(report.topWins) ? report.topWins.slice(0, 2) : [];
   const losses = Array.isArray(report.topLosses) ? report.topLosses.slice(0, 2) : [];
-  const topWinText = wins.length
-    ? wins.map((row) => `${row.tokenSymbol || "UNKNOWN"} ${fmtUsd(row.pnlUsd)} (${fmtPct(row.totalPnlPercent)})`).join("；")
-    : "暂无";
-  const topLossText = losses.length
-    ? losses.map((row) => `${row.tokenSymbol || "UNKNOWN"} ${fmtUsd(row.pnlUsd)} (${fmtPct(row.totalPnlPercent)})`).join("；")
-    : "暂无";
+  const address = report.walletAddress || "";
+  const profile = report.profileLabel || report.profile || "n/a";
+  const group = report.signalGroup || "n/a";
+  const score = report.reliabilityScore ?? "n/a";
 
   return [
-    "地址分析",
-    `${name}`,
-    report.walletAddress,
+    "🧠 <b>聪明钱地址分析</b>",
     "",
-    `画像：${report.profileLabel || report.profile || "n/a"} | 分组：${report.signalGroup || "n/a"}`,
-    `结论：${report.summary || "暂无摘要"}`,
-    `可靠度：${report.reliabilityScore ?? "n/a"}`,
+    `🏷️ <b>${escapeHtml(name)}</b>`,
+    `🔗 <code>${escapeHtml(shortAddress(address))}</code>`,
+    `<code>${escapeHtml(address)}</code>`,
     "",
-    `已实现收益：${fmtUsd(m.totalRealizedPnlUsd)}`,
-    `胜率：${fmtPct(m.winRatePct)}`,
-    `买入/卖出：${m.buyCount ?? "n/a"} / ${m.sellCount ?? "n/a"}`,
-    `最近活跃：${fmtHours(m.latestTradeAgeHours)}`,
-    `低市值偏好：${fmtPct(m.lowMcBuyPct)}`,
-    `中位买入市值：${fmtUsd(m.medianEntryMarketCapUsd)}`,
+    `📌 <b>画像</b>：${escapeHtml(profile)} ｜ ${escapeHtml(group)}`,
+    `⭐ <b>可靠度</b>：${escapeHtml(score)}/100`,
+    `📝 <b>结论</b>：${escapeHtml(report.summary || "暂无摘要")}`,
     "",
-    `代表盈利：${topWinText}`,
-    `代表亏损：${topLossText}`,
+    "📊 <b>核心数据</b>",
+    `• 已实现收益：<b>${escapeHtml(fmtUsd(m.totalRealizedPnlUsd))}</b>`,
+    `• 胜率：<b>${escapeHtml(fmtPct(m.winRatePct))}</b>`,
+    `• 买入 / 卖出：${escapeHtml(m.buyCount ?? "n/a")} / ${escapeHtml(m.sellCount ?? "n/a")}`,
+    `• 最近活跃：${escapeHtml(fmtHours(m.latestTradeAgeHours))}`,
+    `• 低市值偏好：${escapeHtml(fmtPct(m.lowMcBuyPct))}`,
+    `• 中位买入市值：${escapeHtml(fmtUsd(m.medianEntryMarketCapUsd))}`,
+    "",
+    "💰 <b>代表盈利</b>",
+    formatTokenRows(wins, true),
+    "",
+    "📉 <b>代表亏损</b>",
+    formatTokenRows(losses, false),
+    "",
+    `🎯 <b>跟踪建议</b>：${escapeHtml(recommendation(report))}`,
   ].join("\n");
 }
 
