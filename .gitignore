@@ -1,4 +1,5 @@
 .env
+deploy/server.env
 data/
 logs/
 *.ndjson

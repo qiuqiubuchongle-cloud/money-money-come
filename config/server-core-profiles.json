@@ -1,0 +1,233 @@
+{
+  "generatedAt": "2026-05-08T05:21:37.704Z",
+  "total": 10,
+  "profiles": [
+    {
+      "walletAddress": "0x2ce9d43d1cba6ae31d7f07bfe0098dfa2d833373",
+      "walletName": "Bob枯坐",
+      "walletEmoji": "",
+      "profile": "ten_k_profit_champion",
+      "profileLabel": "稳定盈利手",
+      "labels": [
+        "hot_meme_sniper",
+        "ten_k_profit_champion"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 100,
+      "walletTier": "核心",
+      "walletStyleLabel": "早期盈利雷达",
+      "signalGroup": "盈利组",
+      "emotionWeight": 1,
+      "totalRealizedPnlUsd": 44538.40923236492,
+      "winRatePct": 71.17,
+      "lowMcBuyPct": 98.34710743801654,
+      "analysisSummary": "早期盈利雷达，44,538U已实现，胜率71.2%，刚动过",
+      "latestTradeIso": "",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x7a2363a401b2340c7941dd2eeff0196a5078d2e6",
+      "walletName": "",
+      "walletEmoji": "",
+      "profile": "hundred_x_hunter",
+      "profileLabel": "早期金狗手",
+      "labels": [
+        "hundred_x_hunter",
+        "hot_meme_sniper",
+        "ten_k_profit_champion"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 100,
+      "walletTier": "核心",
+      "walletStyleLabel": "早期盈利雷达",
+      "signalGroup": "百倍组",
+      "emotionWeight": 1,
+      "totalRealizedPnlUsd": 39043.72311564372,
+      "winRatePct": 64.75,
+      "lowMcBuyPct": 99.82238010657194,
+      "analysisSummary": "早期盈利雷达，39,044U已实现，胜率64.8%，刚动过",
+      "latestTradeIso": "",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0xa83b73f5644cde337b61da79589f10ea15548811",
+      "walletName": "",
+      "walletEmoji": "",
+      "profile": "ten_k_profit_champion",
+      "profileLabel": "稳定盈利手",
+      "labels": [
+        "ten_k_profit_champion"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 97,
+      "walletTier": "核心",
+      "walletStyleLabel": "早期盈利雷达",
+      "signalGroup": "盈利组",
+      "emotionWeight": 1.3,
+      "totalRealizedPnlUsd": 70709.10815220595,
+      "winRatePct": 46.62,
+      "lowMcBuyPct": 95.07793273174734,
+      "analysisSummary": "早期盈利雷达，70,709U已实现，胜率46.6%，刚动过",
+      "latestTradeIso": "2026-05-08T05:00:24.000Z",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x55976c6818e4794f3e2e7179eea2cc2202811e11",
+      "walletName": "",
+      "walletEmoji": "",
+      "profile": "ten_k_profit_champion",
+      "profileLabel": "稳定盈利手",
+      "labels": [
+        "hot_meme_sniper",
+        "ten_k_profit_champion"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 97,
+      "walletTier": "核心",
+      "walletStyleLabel": "早期盈利雷达",
+      "signalGroup": "盈利组",
+      "emotionWeight": 1,
+      "totalRealizedPnlUsd": 13923.134390213478,
+      "winRatePct": 38.99,
+      "lowMcBuyPct": 99.55156950672645,
+      "analysisSummary": "早期盈利雷达，13,923U已实现，胜率39.0%，2.4h前活跃",
+      "latestTradeIso": "",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x1da8498facdbb3089197bf12b9f1d24c04c21922",
+      "walletName": "",
+      "walletEmoji": "",
+      "profile": "ten_k_profit_champion",
+      "profileLabel": "稳定盈利手",
+      "labels": [
+        "hot_meme_sniper",
+        "ten_k_profit_champion"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 89,
+      "walletTier": "核心",
+      "walletStyleLabel": "早期盈利雷达",
+      "signalGroup": "盈利组",
+      "emotionWeight": 1,
+      "totalRealizedPnlUsd": 10003.471596546497,
+      "winRatePct": 40.91,
+      "lowMcBuyPct": 95.23809523809523,
+      "analysisSummary": "早期盈利雷达，10,003U已实现，胜率40.9%，9.4h前活跃",
+      "latestTradeIso": "",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x262793904b25715dacd8b487f98b5339284e7258",
+      "walletName": "",
+      "walletEmoji": "",
+      "profile": "hot_meme_sniper",
+      "profileLabel": "热点雷达手",
+      "labels": [
+        "hot_meme_sniper"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 86,
+      "walletTier": "核心",
+      "walletStyleLabel": "观察样本",
+      "signalGroup": "热点组",
+      "emotionWeight": 1,
+      "totalRealizedPnlUsd": 4359.3108843036725,
+      "winRatePct": 83.33,
+      "lowMcBuyPct": 100,
+      "analysisSummary": "观察样本，4,359U已实现，胜率83.3%，13.0h前活跃",
+      "latestTradeIso": "",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x4596ae7081cbfa2752c09ffdde42f949d5470238",
+      "walletName": "",
+      "walletEmoji": "",
+      "profile": "hundred_x_hunter",
+      "profileLabel": "早期金狗手",
+      "labels": [
+        "hundred_x_hunter",
+        "hot_meme_sniper"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 86,
+      "walletTier": "核心",
+      "walletStyleLabel": "低市值猎手",
+      "signalGroup": "百倍组",
+      "emotionWeight": 1,
+      "totalRealizedPnlUsd": 1778.5321021252812,
+      "winRatePct": 52.54,
+      "lowMcBuyPct": 96.71361502347418,
+      "analysisSummary": "低市值猎手，1,779U已实现，胜率52.5%，8.1h前活跃",
+      "latestTradeIso": "",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x4085fe0d2b63cd457622e5473e48f130ef14f466",
+      "walletName": "4号cm",
+      "walletEmoji": "",
+      "profile": "hundred_x_hunter",
+      "profileLabel": "早期金狗手",
+      "labels": [
+        "hundred_x_hunter",
+        "hot_meme_sniper"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 86,
+      "walletTier": "核心",
+      "walletStyleLabel": "低市值猎手",
+      "signalGroup": "百倍组",
+      "emotionWeight": 1,
+      "totalRealizedPnlUsd": 284.19696179840304,
+      "winRatePct": 61.54,
+      "lowMcBuyPct": 100,
+      "analysisSummary": "低市值猎手，284U已实现，胜率61.5%，13.7h前活跃",
+      "latestTradeIso": "",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x710a82e870c2e2a273841ecd47c45c198620d679",
+      "walletName": "老板发财1",
+      "walletEmoji": "",
+      "profile": "hot_meme_sniper",
+      "profileLabel": "热点雷达手",
+      "labels": [
+        "hot_meme_sniper"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 83,
+      "walletTier": "核心",
+      "walletStyleLabel": "观察样本",
+      "signalGroup": "热点组",
+      "emotionWeight": 1,
+      "totalRealizedPnlUsd": 4900.031946100789,
+      "winRatePct": 54.55,
+      "lowMcBuyPct": 64.70588235294117,
+      "analysisSummary": "观察样本，4,900U已实现，胜率54.5%，13.5h前活跃",
+      "latestTradeIso": "",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x8d5624fa29526c879a1ca7560961e4c5a08089ae",
+      "walletName": "oxaa / 链上小旋风",
+      "walletEmoji": "",
+      "profile": "hot_meme_sniper",
+      "profileLabel": "热点雷达手",
+      "labels": [
+        "hot_meme_sniper"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 78,
+      "walletTier": "核心",
+      "walletStyleLabel": "叙事捕手",
+      "signalGroup": "热点组",
+      "emotionWeight": 1.2,
+      "totalRealizedPnlUsd": 4984.429355457914,
+      "winRatePct": 50,
+      "lowMcBuyPct": 76.19047619047619,
+      "analysisSummary": "链上小旋风，擅长捕捉叙事，适合同组共振确认",
+      "latestTradeIso": "2026-05-07T17:40:05.000Z",
+      "safeCandidate": true
+    }
+  ]
+}

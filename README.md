@@ -150,6 +150,21 @@ npx skills add https://github.com/qiuqiubuchongle-cloud/money-money-come
 
 安装后重启 Codex / Agent，让 Skill 生效。
 
+## 服务器信号部署
+
+如果你想把核心观察池放到服务器长期运行，使用这套文件：
+
+- `config/server-core-profiles.json`
+- `config/server-core-groups.json`
+- `config/server-core-addresses.txt`
+- `deploy/server.env.example`
+- `deploy/run-server-monitor.sh`
+- `deploy/money-money-come.service`
+
+详细步骤见 [`deploy/README-server.md`](./deploy/README-server.md)。
+
+服务器默认规则是：同一正向分组内至少 `2` 个核心地址在 `10` 分钟内集中买入同一 BSC meme，才给 Telegram 推送提醒。默认只提醒和模拟观察，不自动交易。
+
 ## 配置攻略
 
 ### 1. 配置 OKX
