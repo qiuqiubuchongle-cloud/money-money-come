@@ -234,14 +234,29 @@ function runGmgnJson(args, timeout = 20_000) {
 async function sendTelegram(text) {
   if (!telegramBotToken || !telegramChatId) return;
   try {
+    const payload = JSON.stringify({
+      chat_id: telegramChatId,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+    });
+    if (process.env.TELEGRAM_PROXY) {
+      const run = spawnSync("curl", [
+        "-sS",
+        "--max-time", "20",
+        "-x", process.env.TELEGRAM_PROXY,
+        "-X", "POST",
+        "-H", "content-type: application/json",
+        "--data-binary", "@-",
+        `https://api.telegram.org/bot${telegramBotToken}/sendMessage`,
+      ], { input: payload, encoding: "utf8" });
+      if (run.status !== 0) console.error(`[telegram] ${(run.stderr || run.stdout || "").replaceAll(telegramBotToken, "<hidden>")}`);
+      return;
+    }
     const res = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        chat_id: telegramChatId,
-        text,
-        disable_web_page_preview: true,
-      }),
+      body: payload,
     });
     if (!res.ok) console.error(`[telegram] HTTP ${res.status}: ${await res.text()}`);
   } catch (error) {
@@ -1154,6 +1169,13 @@ function walletShortName(wallet, profileMap = new Map()) {
   return `${String(wallet || "").slice(0, 6)}...${String(wallet || "").slice(-4)}`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
 function groupedSignalSummary(event) {
   const profiles = [...(event.smartWalletProfiles || [])].sort((a, b) => Number(b.reliabilityScore || 0) - Number(a.reliabilityScore || 0));
   const uniqueProfiles = new Set(profiles.map((row) => row.profile));
@@ -1171,14 +1193,25 @@ function groupedSignalSummary(event) {
 function telegramSignalMessage(event, trade) {
   const grouped = groupedSignalSummary(event);
   const groupLabel = grouped.topProfile ? (smartWalletProfiles.byWallet.get(event.smartWalletProfiles?.find((row) => row.profile === grouped.topProfile)?.walletAddress || "")?.profileLabel || grouped.topProfile) : (event.sentimentGroup?.label || "中性观察");
+  const sourceText = event.sources?.join(" + ") || event.source || "unknown";
+  const namesText = grouped.names.join("、") || "n/a";
   const lines = [
-    `BSC 分组信号`,
-    `${event.symbol || "UNKNOWN"} | ${event.name || event.symbol || "UNKNOWN"}`,
-    `分组: ${groupLabel} | 情绪分 ${event.sentimentGroup?.score ?? "n/a"}`,
-    `来源: ${event.sources?.join(" + ") || event.source || "unknown"}`,
-    `合约: ${event.token}`,
-    `市值: ${fmtUsd(event.currentMarketCapUsd || event.marketCapUsd)} | 流动性: ${fmtUsd(event.currentLiquidityUsd)} | 持有人: ${event.currentHolders || event.holders || "n/a"}`,
-    `触发: ${grouped.triggerCount} 个安全地址 | 同组 ${grouped.topCount || 0} 个 | 名单: ${grouped.names.join("、") || "n/a"}`,
+    `🚨 <b>BSC 分组信号</b>`,
+    "",
+    `🪙 <b>${escapeHtml(event.symbol || "UNKNOWN")}</b> ｜ ${escapeHtml(event.name || event.symbol || "UNKNOWN")}`,
+    `📌 <b>分组</b>：${escapeHtml(groupLabel)} ｜ 情绪分 ${escapeHtml(event.sentimentGroup?.score ?? "n/a")}`,
+    `🔗 <b>合约</b>：<code>${escapeHtml(event.token)}</code>`,
+    `📡 <b>来源</b>：${escapeHtml(sourceText)}`,
+    "",
+    `📊 <b>市场数据</b>`,
+    `• 市值：<b>${escapeHtml(fmtUsd(event.currentMarketCapUsd || event.marketCapUsd))}</b>`,
+    `• 流动性：${escapeHtml(fmtUsd(event.currentLiquidityUsd))}`,
+    `• 持有人：${escapeHtml(event.currentHolders || event.holders || "n/a")}`,
+    "",
+    `🧠 <b>聪明钱触发</b>`,
+    `• 触发地址：<b>${escapeHtml(grouped.triggerCount)}</b> 个`,
+    `• 同组地址：<b>${escapeHtml(grouped.topCount || 0)}</b> 个`,
+    `• 名单：${escapeHtml(namesText)}`,
   ];
 
   if (event.smartWalletProfiles?.length) {
@@ -1187,18 +1220,22 @@ function telegramSignalMessage(event, trade) {
       return acc;
     }, {});
     const bucketText = Object.entries(buckets).map(([k, v]) => `${k}:${v}`).join(" / ");
-    lines.push(`画像: ${bucketText}`);
+    lines.push(`• 画像：${escapeHtml(bucketText)}`);
   }
 
-  lines.push(`叙事: ${narrativeSummary(event)}`);
+  lines.push("");
+  lines.push(`📝 <b>叙事摘要</b>`);
+  lines.push(escapeHtml(narrativeSummary(event)));
 
   if (trade) {
-    lines.push(`模拟: 已按 ${fmtUsd(paperSizeUsd)} 建仓 | 成本后入场价 ${trade.entryPrice}`);
+    lines.push("");
+    lines.push(`🧪 <b>模拟盘</b>：已按 ${escapeHtml(fmtUsd(paperSizeUsd))} 建仓，成本后入场价 <code>${escapeHtml(trade.entryPrice)}</code>`);
   } else {
-    lines.push(`动作: 仅提醒，未建仓`);
+    lines.push("");
+    lines.push(`🔔 <b>动作</b>：仅提醒，未建仓`);
   }
 
-  lines.push(`风险: 默认仅分析和提醒，不代表实盘建议。`);
+  lines.push(`⚠️ <b>风险</b>：默认仅分析和提醒，不代表实盘建议。`);
   return lines.join("\n");
 }
 
