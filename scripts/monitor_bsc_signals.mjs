@@ -132,7 +132,10 @@ function loadSafeTrackedWallets() {
 
 function runJson(args, timeout = 25_000) {
   const run = spawnSync("onchainos", args, { encoding: "utf8", timeout });
-  if (run.status !== 0) return { ok: false, error: (run.stderr || run.stdout || "").trim() };
+  if (run.status !== 0) {
+    const error = (run.error?.message || run.stderr || run.stdout || "").trim();
+    return { ok: false, error };
+  }
   try {
     return JSON.parse(run.stdout || "{}");
   } catch (error) {
@@ -395,6 +398,10 @@ function getPrivateBuys() {
       "--chain", "bsc",
       "--trade-type", "1",
     ]);
+    if (!j.ok) {
+      console.error(`[private-tracker] ${j.error || "unknown onchainos error"}`);
+      continue;
+    }
     const trades = Array.isArray(j.data?.trades) ? j.data.trades : Array.isArray(j.data) ? j.data : [];
     all.push(...trades);
   }

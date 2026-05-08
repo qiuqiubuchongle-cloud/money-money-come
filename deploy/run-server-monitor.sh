@@ -17,6 +17,7 @@ set +a
 
 cd "$ROOT_DIR"
 mkdir -p data logs
+export PATH="/root/.local/bin:/root/.bun/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
 echo "[money-money-come] starting monitor"
 echo "[money-money-come] profiles: ${SMART_WALLET_PROFILES_PATH:-data/smart_wallet_profiles_bsc.json}"

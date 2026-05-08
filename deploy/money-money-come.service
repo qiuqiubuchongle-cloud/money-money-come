@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=simple
 WorkingDirectory=/opt/money-money-come
 EnvironmentFile=/opt/money-money-come/deploy/server.env
+Environment=PATH=/root/.local/bin:/root/.bun/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/usr/bin/env node scripts/monitor_bsc_signals.mjs
 Restart=always
 RestartSec=10
