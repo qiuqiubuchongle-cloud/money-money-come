@@ -15,6 +15,9 @@ import {
   profileLabel,
   describeWallet,
   signalGroupLabel,
+  walletValueScore,
+  walletTier,
+  walletStyleLabel,
 } from "./lib_smart_wallets.mjs";
 
 const metaPath = process.env.SMART_WALLET_META_PATH || "data/smart_wallet_meta.json";
@@ -113,8 +116,25 @@ const metrics = {
 };
 
 const cls = classifyWallet(metrics);
-const topWins = [...recentPnl].sort((a, b) => finite(b.pnlUsd) - finite(a.pnlUsd)).slice(0, 3);
-const topLosses = [...recentPnl].sort((a, b) => finite(a.pnlUsd) - finite(b.pnlUsd)).slice(0, 3);
+const valueScore = walletValueScore(metrics);
+const tier = walletTier({ ...metrics, walletValueScore: valueScore });
+const styleLabel = walletStyleLabel(metrics);
+const overviewWins = Array.isArray(overview?.topPnlTokenList) ? overview.topPnlTokenList.map((row) => ({
+  token: String(row.tokenContractAddress || row.token || "").toLowerCase(),
+  tokenSymbol: String(row.tokenSymbol || row.symbol || "UNKNOWN"),
+  pnlUsd: finite(row.tokenPnLUsd || row.pnlUsd),
+  totalPnlPercent: finite(row.tokenPnLPercent || row.totalPnlPercent),
+})) : [];
+const recentWins = [...recentPnl]
+  .filter((row) => finite(row.pnlUsd) > 0)
+  .sort((a, b) => finite(b.pnlUsd) - finite(a.pnlUsd))
+  .map((row) => ({
+    token: row.token,
+    tokenSymbol: row.tokenSymbol,
+    pnlUsd: finite(row.pnlUsd),
+    totalPnlPercent: finite(row.totalPnlPercent),
+  }));
+const topWins = (overviewWins.length ? overviewWins : recentWins).slice(0, 3);
 
 const report = {
   generatedAt: new Date().toISOString(),
@@ -125,20 +145,12 @@ const report = {
   profileLabel: profileLabel(cls.primary),
   signalGroup: signalGroupLabel(cls.primary),
   reliabilityScore: cls.reliabilityScore,
-  summary: describeWallet({ ...metrics, profile: cls.primary }),
+  walletValueScore: valueScore,
+  walletTier: tier,
+  walletStyleLabel: styleLabel,
+  summary: describeWallet({ ...metrics, profile: cls.primary, walletValueScore: valueScore, walletTier: tier, walletStyleLabel: styleLabel }),
   metrics,
-  topWins: topWins.map((row) => ({
-    token: row.token,
-    tokenSymbol: row.tokenSymbol,
-    pnlUsd: finite(row.pnlUsd),
-    totalPnlPercent: finite(row.totalPnlPercent),
-  })),
-  topLosses: topLosses.map((row) => ({
-    token: row.token,
-    tokenSymbol: row.tokenSymbol,
-    pnlUsd: finite(row.pnlUsd),
-    totalPnlPercent: finite(row.totalPnlPercent),
-  })),
+  topWins,
   overview,
 };
 

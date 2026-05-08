@@ -48,6 +48,12 @@ function fmtPct(value) {
   return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 }
 
+function fmtPlainPct(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "n/a";
+  return `${n.toFixed(1)}%`;
+}
+
 function fmtHours(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "n/a";
@@ -71,6 +77,15 @@ function shortAddress(address) {
 
 function recommendation(report) {
   const m = report.metrics || {};
+  if (report.walletTier === "核心") {
+    return "进核心池。等同组共振，不抢单。";
+  }
+  if (report.walletTier === "观察") {
+    return "先观察。再来 1-2 个同类地址确认再推信号。";
+  }
+  if (report.walletTier === "降权") {
+    return "有亮点但不够稳，降权看。";
+  }
   const pnl = Number(m.totalRealizedPnlUsd || 0);
   const winRate = Number(m.winRatePct || 0);
   const reliability = Number(report.reliabilityScore || 0);
@@ -89,7 +104,7 @@ function recommendation(report) {
 
 function formatTokenRows(rows, positive) {
   if (!rows.length) return "暂无";
-  const icon = positive ? "✅" : "⚠️";
+  const icon = positive ? "🏆" : "⚠️";
   return rows.map((row) => {
     const symbol = escapeHtml(row.tokenSymbol || "UNKNOWN");
     return `${icon} <b>${symbol}</b>  ${escapeHtml(fmtUsd(row.pnlUsd))}  (${escapeHtml(fmtPct(row.totalPnlPercent))})`;
@@ -136,36 +151,31 @@ function buildText(report) {
   const name = report.walletName || "未命名地址";
   const m = report.metrics || {};
   const wins = Array.isArray(report.topWins) ? report.topWins.slice(0, 2) : [];
-  const losses = Array.isArray(report.topLosses) ? report.topLosses.slice(0, 2) : [];
   const address = report.walletAddress || "";
-  const profile = report.profileLabel || report.profile || "n/a";
+  const profile = report.walletStyleLabel || report.profileLabel || report.profile || "n/a";
   const group = report.signalGroup || "n/a";
-  const score = report.reliabilityScore ?? "n/a";
+  const score = report.walletValueScore ?? report.reliabilityScore ?? "n/a";
+  const tier = report.walletTier || "观察";
 
   return [
-    "🧠 <b>聪明钱地址分析</b>",
+    "🧠 <b>聪明钱画像卡</b>",
     "",
     `🏷️ <b>${escapeHtml(name)}</b>`,
     `🔗 <code>${escapeHtml(shortAddress(address))}</code>`,
     `<code>${escapeHtml(address)}</code>`,
     "",
-    `📌 <b>画像</b>：${escapeHtml(profile)} ｜ ${escapeHtml(group)}`,
-    `⭐ <b>可靠度</b>：${escapeHtml(score)}/100`,
+    `📌 <b>画像</b>：${escapeHtml(profile)} ｜ ${escapeHtml(group)} ｜ ${escapeHtml(tier)}`,
+    `⭐ <b>价值分</b>：${escapeHtml(score)}/100`,
     `📝 <b>结论</b>：${escapeHtml(report.summary || "暂无摘要")}`,
     "",
     "📊 <b>核心数据</b>",
     `• 已实现收益：<b>${escapeHtml(fmtUsd(m.totalRealizedPnlUsd))}</b>`,
-    `• 胜率：<b>${escapeHtml(fmtPct(m.winRatePct))}</b>`,
-    `• 买入 / 卖出：${escapeHtml(m.buyCount ?? "n/a")} / ${escapeHtml(m.sellCount ?? "n/a")}`,
+    `• 胜率：<b>${escapeHtml(fmtPlainPct(m.winRatePct))}</b>`,
     `• 最近活跃：${escapeHtml(fmtHours(m.latestTradeAgeHours))}`,
-    `• 低市值偏好：${escapeHtml(fmtPct(m.lowMcBuyPct))}`,
-    `• 中位买入市值：${escapeHtml(fmtUsd(m.medianEntryMarketCapUsd))}`,
+    `• 低市值偏好：${escapeHtml(fmtPlainPct(m.lowMcBuyPct))}`,
     "",
-    "💰 <b>代表盈利</b>",
+    "🏆 <b>代表战绩</b>",
     formatTokenRows(wins, true),
-    "",
-    "📉 <b>代表亏损</b>",
-    formatTokenRows(losses, false),
     "",
     `🎯 <b>跟踪建议</b>：${escapeHtml(recommendation(report))}`,
   ].join("\n");

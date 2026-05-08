@@ -12,6 +12,7 @@ const pollMs = Number(process.env.POLL_MS || 60_000);
 const paperSizeUsd = Number(process.env.PAPER_SIZE_USD || 10);
 const privateWindowMs = Number(process.env.PRIVATE_WINDOW_MS || 10 * 60_000);
 const minPrivateWallets = Number(process.env.MIN_PRIVATE_WALLETS || 2);
+const allowOfficialSoloSignal = process.env.ALLOW_OFFICIAL_SOLO_SIGNAL === "1";
 const stopLossPct = Number(process.env.STOP_LOSS_PCT || -25);
 const takeProfit1Pct = Number(process.env.TAKE_PROFIT_1_PCT || 50);
 const takeProfit2Pct = Number(process.env.TAKE_PROFIT_2_PCT || 100);
@@ -363,6 +364,19 @@ function walletProfileWeight(walletAddress) {
   const wallet = String(walletAddress || "").toLowerCase();
   const profile = smartWalletProfiles.byWallet.get(wallet);
   return profile ? Number(profile.emotionWeight || 1) : 1;
+}
+
+function profileCn(profile) {
+  return {
+    hundred_x_hunter: "百倍组",
+    ten_k_profit_champion: "盈利组",
+    hot_meme_sniper: "热点组",
+    conviction_reloader: "加仓组",
+    balanced_scout: "观察组",
+    high_frequency_rookie: "噪音组",
+    sleeping_zombie: "休眠组",
+    watch_only: "待验证",
+  }[profile] || profile || "未知组";
 }
 
 function walletProfileMeta(walletAddress) {
@@ -1035,6 +1049,10 @@ function combineEvents(events) {
       item.smartWalletProfiles.push({
         walletAddress: wallet,
         profile: profile.profile,
+        profileLabel: profile.profileLabel || profileCn(profile.profile),
+        walletTier: profile.walletTier || "",
+        walletStyleLabel: profile.walletStyleLabel || "",
+        walletValueScore: profile.walletValueScore || 0,
         labels: profile.labels || [],
         reliabilityScore: profile.reliabilityScore || 0,
       });
@@ -1076,6 +1094,7 @@ function groupedProfileStats(event) {
   for (const row of profiles) {
     const profile = String(row.profile || "");
     if (!positive.has(profile)) continue;
+    if (row.walletTier && row.walletTier !== "核心") continue;
     counts[profile] = (counts[profile] || 0) + 1;
     walletsByProfile[profile] = walletsByProfile[profile] || [];
     walletsByProfile[profile].push(String(row.walletAddress || "").toLowerCase());
@@ -1089,12 +1108,23 @@ function groupedProfileStats(event) {
       topCount = count;
     }
   }
+  const sources = new Set(event.sources || [event.source]);
+  const externalConfirm = ["okx", "gmgn_smartmoney", "gmgn_market", "gmgn_trending", "fourmeme", "binance_meme", "binance_topic"]
+    .some((source) => sources.has(source));
+  const triggerCount = profiles.length;
+  const signalLevel = topCount >= 3 || (topCount >= 2 && externalConfirm) ? "强信号"
+    : topCount >= 2 ? "正式信号"
+      : triggerCount >= 1 ? "观察信号"
+        : "无信号";
 
   return {
     counts,
     walletsByProfile,
     topProfile,
     topCount,
+    triggerCount,
+    externalConfirm,
+    signalLevel,
     qualifies: topCount >= 2,
   };
 }
@@ -1153,13 +1183,13 @@ function sentimentNarrative(event) {
   if (!group) return "情绪信号暂缺";
   const c = group.counts || {};
   const parts = [];
-  if (c.hundred_x_hunter) parts.push(`百倍金狗 ${c.hundred_x_hunter}`);
-  if (c.ten_k_profit_champion) parts.push(`10K冠军 ${c.ten_k_profit_champion}`);
-  if (c.hot_meme_sniper) parts.push(`热门土狗 ${c.hot_meme_sniper}`);
-  if (c.conviction_reloader) parts.push(`加仓选手 ${c.conviction_reloader}`);
-  if (c.high_frequency_rookie) parts.push(`高频菜鸡 ${c.high_frequency_rookie}`);
-  if (c.balanced_scout) parts.push(`均衡侦察 ${c.balanced_scout}`);
-  if (c.sleeping_zombie) parts.push(`休眠地址 ${c.sleeping_zombie}`);
+  if (c.hundred_x_hunter) parts.push(`百倍组 ${c.hundred_x_hunter}`);
+  if (c.ten_k_profit_champion) parts.push(`盈利组 ${c.ten_k_profit_champion}`);
+  if (c.hot_meme_sniper) parts.push(`热点组 ${c.hot_meme_sniper}`);
+  if (c.conviction_reloader) parts.push(`加仓组 ${c.conviction_reloader}`);
+  if (c.high_frequency_rookie) parts.push(`噪音组 ${c.high_frequency_rookie}`);
+  if (c.balanced_scout) parts.push(`观察组 ${c.balanced_scout}`);
+  if (c.sleeping_zombie) parts.push(`休眠组 ${c.sleeping_zombie}`);
   return `${group.label}｜${parts.join(" / ") || "无画像样本"}｜情绪分 ${group.score}`;
 }
 
@@ -1192,14 +1222,14 @@ function groupedSignalSummary(event) {
 
 function telegramSignalMessage(event, trade) {
   const grouped = groupedSignalSummary(event);
-  const groupLabel = grouped.topProfile ? (smartWalletProfiles.byWallet.get(event.smartWalletProfiles?.find((row) => row.profile === grouped.topProfile)?.walletAddress || "")?.profileLabel || grouped.topProfile) : (event.sentimentGroup?.label || "中性观察");
+  const groupLabel = grouped.topProfile ? profileCn(grouped.topProfile) : (event.sentimentGroup?.label || "中性观察");
   const sourceText = event.sources?.join(" + ") || event.source || "unknown";
   const namesText = grouped.names.join("、") || "n/a";
   const lines = [
     `🚨 <b>BSC 分组信号</b>`,
     "",
     `🪙 <b>${escapeHtml(event.symbol || "UNKNOWN")}</b> ｜ ${escapeHtml(event.name || event.symbol || "UNKNOWN")}`,
-    `📌 <b>分组</b>：${escapeHtml(groupLabel)} ｜ 情绪分 ${escapeHtml(event.sentimentGroup?.score ?? "n/a")}`,
+    `📌 <b>等级</b>：${escapeHtml(event.groupedProfileStats?.signalLevel || grouped.signalLevel || "正式信号")} ｜ ${escapeHtml(groupLabel)} ｜ 情绪分 ${escapeHtml(event.sentimentGroup?.score ?? "n/a")}`,
     `🔗 <b>合约</b>：<code>${escapeHtml(event.token)}</code>`,
     `📡 <b>来源</b>：${escapeHtml(sourceText)}`,
     "",
@@ -1210,13 +1240,15 @@ function telegramSignalMessage(event, trade) {
     "",
     `🧠 <b>聪明钱触发</b>`,
     `• 触发地址：<b>${escapeHtml(grouped.triggerCount)}</b> 个`,
-    `• 同组地址：<b>${escapeHtml(grouped.topCount || 0)}</b> 个`,
+    `• 核心同组：<b>${escapeHtml(grouped.topCount || 0)}</b> 个`,
+    `• 外部确认：${escapeHtml(event.groupedProfileStats?.externalConfirm ? "有" : "无")}`,
     `• 名单：${escapeHtml(namesText)}`,
   ];
 
   if (event.smartWalletProfiles?.length) {
     const buckets = event.smartWalletProfiles.reduce((acc, row) => {
-      acc[row.profile] = (acc[row.profile] || 0) + 1;
+      const key = profileCn(row.profile);
+      acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
     const bucketText = Object.entries(buckets).map(([k, v]) => `${k}:${v}`).join(" / ");
@@ -1496,7 +1528,7 @@ async function shouldOpenCompositeTrade(event) {
   const groupedStats = groupedProfileStats(event);
   event.groupedProfileStats = groupedStats;
   const scoreOk = effectiveScore >= minCompositeScore;
-  const groupedOk = groupedStats.qualifies || event.source === "okx" || (event.sources || []).includes("okx");
+  const groupedOk = groupedStats.qualifies || (allowOfficialSoloSignal && (event.source === "okx" || (event.sources || []).includes("okx")));
   const strongFourMemeSolo = allowStrongFourMemeSolo
     && sources.size === 1
     && sources.has("fourmeme")

@@ -25,8 +25,12 @@ for (const row of profiles) {
     profile,
     profileLabel: row.profileLabel,
     reliabilityScore: finite(row.reliabilityScore),
+    walletValueScore: finite(row.walletValueScore),
+    walletTier: row.walletTier || "",
+    walletStyleLabel: row.walletStyleLabel || "",
     totalRealizedPnlUsd: finite(row.totalRealizedPnlUsd),
     winRatePct: finite(row.winRatePct),
+    analysisSummary: row.analysisSummary || "",
     latestTradeIso: row.latestTradeIso || "",
   });
 }
@@ -47,12 +51,16 @@ const signalPool = profiles
     profile: row.profile,
     profileLabel: row.profileLabel,
     reliabilityScore: finite(row.reliabilityScore),
+    walletValueScore: finite(row.walletValueScore),
+    walletTier: row.walletTier || "",
+    walletStyleLabel: row.walletStyleLabel || "",
     emotionWeight: finite(row.emotionWeight, 1),
     winRatePct: finite(row.winRatePct),
     totalRealizedPnlUsd: finite(row.totalRealizedPnlUsd),
+    analysisSummary: row.analysisSummary || "",
     safeCandidate: isSafeSignalCandidate(row),
   }))
-  .sort((a, b) => b.reliabilityScore - a.reliabilityScore);
+  .sort((a, b) => b.walletValueScore - a.walletValueScore || b.reliabilityScore - a.reliabilityScore);
 
 const safeSignalPool = signalPool.filter((row) => row.safeCandidate);
 const excludedSignalPool = signalPool.filter((row) => !row.safeCandidate);

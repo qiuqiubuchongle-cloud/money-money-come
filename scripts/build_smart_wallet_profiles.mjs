@@ -15,6 +15,9 @@ import {
   classifyWallet,
   profileLabel,
   describeWallet,
+  walletValueScore,
+  walletTier,
+  walletStyleLabel,
 } from "./lib_smart_wallets.mjs";
 const walletScreenPath = process.env.BSC_WALLET_SCREEN_PATH || "data/bsc_wallet_screen.json";
 const trackerActivityPath = process.env.OKX_TRACKER_ACTIVITY_PATH || "data/okx_tracker_activity.json";
@@ -267,15 +270,21 @@ function buildProfiles() {
       ])].slice(0, 20),
     };
     const cls = classifyWallet(metrics);
+    const walletValue = walletValueScore(metrics);
+    const tier = walletTier({ ...metrics, walletValueScore: walletValue });
+    const styleLabel = walletStyleLabel(metrics);
     profiles.push({
       ...metrics,
       profile: cls.primary,
       labels: cls.labels,
       reliabilityScore: cls.reliabilityScore,
+      walletValueScore: walletValue,
+      walletTier: tier,
+      walletStyleLabel: styleLabel,
       emotionWeight: cls.emotionWeight,
       factorScore: cls.score,
       severeNegative: Boolean(cls.severeNegative),
-      analysisSummary: describeWallet({ ...metrics, profile: cls.primary, severeNegative: cls.severeNegative }),
+      analysisSummary: describeWallet({ ...metrics, profile: cls.primary, walletValueScore: walletValue, walletTier: tier, walletStyleLabel: styleLabel, severeNegative: cls.severeNegative }),
       profileLabel: profileLabel(cls.primary),
       latestTradeIso: latestTradeTime ? new Date(latestTradeTime).toISOString() : "",
       okxOverview,
@@ -285,7 +294,8 @@ function buildProfiles() {
   }
 
   profiles.sort((a, b) => (
-    b.reliabilityScore - a.reliabilityScore
+    b.walletValueScore - a.walletValueScore
+    || b.reliabilityScore - a.reliabilityScore
     || a.latestTradeAgeHours - b.latestTradeAgeHours
     || b.tradeCount - a.tradeCount
   ));

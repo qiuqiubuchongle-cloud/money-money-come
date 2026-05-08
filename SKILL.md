@@ -203,14 +203,16 @@ When walking the user through setup, read `references/setup-checklist.md`.
 
 When reporting results to the user:
 
-- Lead with the wallet’s main label and whether it belongs in the safe signal pool
-- Keep the explanation concise
+- Lead with the wallet’s main label, value tier, and whether it belongs in the safe signal pool
+- Keep the explanation concise, lively, and decision-oriented
 - Mention:
+  - wallet value score / tier
   - realized PnL
   - win rate
   - activity / trade cadence
   - low market cap preference
   - whether it should be monitored, down-ranked, or removed
+- Do not foreground loss lists in Telegram wallet cards; keep loss/risk details for local JSON or deeper review
 
 ## Telegram Alert Intent
 
@@ -219,6 +221,8 @@ For future monitoring, grouped alerts should only trigger when:
 - multiple wallets from the same **safe** positive group
 - buy the same token
 - inside the configured time window
+- default formal signal threshold is `>= 2` core wallets from the same positive group
+- strong signal threshold is `>= 3` same-group core wallets, or `>= 2` with an external OKX/GMGN/Four.meme/Binance confirmation
 
 Alert payload should include:
 

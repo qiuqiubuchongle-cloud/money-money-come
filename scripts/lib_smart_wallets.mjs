@@ -127,15 +127,119 @@ export function normalizeOkxHistory(rows) {
 
 export function profileLabel(key) {
   return {
-    hot_meme_sniper: "热门土狗命中选手",
-    hundred_x_hunter: "百倍金狗选手",
-    ten_k_profit_champion: "10K盈利冠军",
-    conviction_reloader: "信仰加仓选手",
-    high_frequency_rookie: "高频交易菜鸡",
-    balanced_scout: "均衡侦察选手",
-    sleeping_zombie: "休眠地址",
-    watch_only: "观察样本",
+    hot_meme_sniper: "热点雷达手",
+    hundred_x_hunter: "早期金狗手",
+    ten_k_profit_champion: "稳定盈利手",
+    conviction_reloader: "加仓信仰手",
+    high_frequency_rookie: "高频噪音号",
+    balanced_scout: "均衡观察员",
+    sleeping_zombie: "休眠钱包",
+    watch_only: "待验证样本",
   }[key] || key;
+}
+
+export function walletValueScore(row) {
+  const pnl = finite(row.totalRealizedPnlUsd);
+  const winRate = finite(row.winRatePct);
+  const latestAgeHours = finite(row.latestTradeAgeHours, 9999);
+  const lowMcBuyPct = finite(row.lowMcBuyPct);
+  const medianMc = finite(row.medianEntryMarketCapUsd);
+  const buyCount = finite(row.buyCount);
+  const sellCount = finite(row.sellCount);
+  const uniqueTokens = finite(row.uniqueTokens);
+  const profitableTokenCount = finite(row.profitableTokenCount);
+  const losingTokenCount = finite(row.losingTokenCount);
+  const avgBuyValueUsd = finite(row.avgBuyValueUsd);
+  const totalTrades = buyCount + sellCount;
+
+  let profitability = 0;
+  if (pnl >= 50_000) profitability += 25;
+  else if (pnl >= 10_000) profitability += 20;
+  else if (pnl >= 3_000) profitability += 14;
+  else if (pnl > 0) profitability += 8;
+  else if (pnl < -1_000) profitability -= 8;
+
+  let consistency = 0;
+  if (winRate >= 65) consistency += 16;
+  else if (winRate >= 50) consistency += 12;
+  else if (winRate >= 38) consistency += 8;
+  else if (winRate > 0) consistency += 3;
+  if (profitableTokenCount >= 8) consistency += 4;
+  else if (profitableTokenCount >= 4) consistency += 2;
+  if (losingTokenCount > profitableTokenCount * 2 && winRate < 45) consistency -= 4;
+
+  let activity = 0;
+  if (latestAgeHours <= 6) activity += 15;
+  else if (latestAgeHours <= 24) activity += 12;
+  else if (latestAgeHours <= 72) activity += 8;
+  else if (latestAgeHours <= 168) activity += 4;
+  else activity -= 6;
+
+  let memeFit = 0;
+  if (lowMcBuyPct >= 90) memeFit += 15;
+  else if (lowMcBuyPct >= 60) memeFit += 11;
+  else if (lowMcBuyPct >= 30) memeFit += 6;
+  if (medianMc > 0 && medianMc <= 80_000) memeFit += 5;
+  else if (medianMc > 800_000) memeFit -= 5;
+
+  let sample = 0;
+  if (totalTrades >= 100 && uniqueTokens >= 15) sample += 15;
+  else if (totalTrades >= 40 && uniqueTokens >= 8) sample += 10;
+  else if (totalTrades >= 12) sample += 5;
+  else sample -= 8;
+
+  let copyability = 10;
+  if (avgBuyValueUsd > 0 && avgBuyValueUsd <= 1_000) copyability += 5;
+  else if (avgBuyValueUsd > 5_000) copyability -= 5;
+  if (sellCount > buyCount * 2 && winRate < 45) copyability -= 5;
+
+  return Math.max(0, Math.min(100, Math.round(
+    profitability + consistency + activity + memeFit + sample + copyability
+  )));
+}
+
+export function walletTier(row) {
+  const score = finite(row.walletValueScore ?? walletValueScore(row));
+  const latestAgeHours = finite(row.latestTradeAgeHours, 9999);
+  const pnl = finite(row.totalRealizedPnlUsd);
+  const winRate = finite(row.winRatePct);
+  const sample = finite(row.buyCount) + finite(row.sellCount);
+  if (latestAgeHours > 24 * 14) return "剔除";
+  if (score >= 75 && pnl > 0 && winRate >= 35 && sample >= 20) return "核心";
+  if (score >= 60 && pnl >= 0 && sample >= 12) return "观察";
+  if (score >= 45) return "降权";
+  return "剔除";
+}
+
+export function walletStyleLabel(row) {
+  const lowMcBuyPct = finite(row.lowMcBuyPct);
+  const pnl = finite(row.totalRealizedPnlUsd);
+  const winRate = finite(row.winRatePct);
+  const medianMc = finite(row.medianEntryMarketCapUsd);
+  const latestAgeHours = finite(row.latestTradeAgeHours, 9999);
+  const sample = finite(row.buyCount) + finite(row.sellCount);
+  if (latestAgeHours > 24 * 14) return "休眠样本";
+  if (sample < 12) return "样本太薄";
+  if (pnl >= 10_000 && lowMcBuyPct >= 70) return "早期盈利雷达";
+  if (pnl >= 10_000 && winRate >= 50) return "稳健盈利选手";
+  if (lowMcBuyPct >= 85 && medianMc <= 100_000) return "低市值猎手";
+  if (medianMc >= 800_000 && pnl > 0) return "高市值波段手";
+  if (winRate < 35 && pnl <= 0) return "高噪音钱包";
+  return "观察样本";
+}
+
+export function walletOneLiner(row) {
+  const tier = row.walletTier || walletTier(row);
+  const style = row.walletStyleLabel || walletStyleLabel(row);
+  const pnl = finite(row.totalRealizedPnlUsd);
+  const winRate = finite(row.winRatePct);
+  const latestAgeHours = finite(row.latestTradeAgeHours, 9999);
+  const lowMcBuyPct = finite(row.lowMcBuyPct);
+  const activeText = latestAgeHours <= 1 ? "刚动过" : latestAgeHours <= 24 ? `${latestAgeHours.toFixed(1)}h前活跃` : `${(latestAgeHours / 24).toFixed(1)}天前活跃`;
+  if (tier === "核心") return `${style}，${Math.round(pnl).toLocaleString()}U已实现，胜率${winRate.toFixed(1)}%，${activeText}`;
+  if (tier === "观察") return `${style}，低市值偏好${lowMcBuyPct.toFixed(0)}%，等同组确认`;
+  if (tier === "降权") return `${style}，有亮点但稳定性不够，先降权看`;
+  return `${style}，暂不进主信号池`;
 }
 
 export function classifyWallet(metrics) {
@@ -234,16 +338,7 @@ export function classifyWallet(metrics) {
 }
 
 export function describeWallet(row) {
-  const notes = [];
-  if (row.profile === "ten_k_profit_champion") notes.push(`近周期已实现盈利 ${Math.round(finite(row.totalRealizedPnlUsd)).toLocaleString()}U`);
-  if (row.profile === "hundred_x_hunter") notes.push(`低市值偏好强，低市值买入占比 ${finite(row.lowMcBuyPct).toFixed(1)}%`);
-  if (row.profile === "hot_meme_sniper") notes.push(`交易活跃，偏好热点轮动，日均交易 ${finite(row.avgTradesPerDay).toFixed(1)} 次`);
-  if (row.profile === "conviction_reloader") notes.push(`重复买入同币明显，重复 token 数 ${finite(row.repeatBuyTokens)}`);
-  if (row.profile === "high_frequency_rookie") notes.push(`交易很勤，但胜率/盈利表现弱`);
-  if (row.profile === "sleeping_zombie") notes.push(`近期缺少有效交易，适合先移出主监控池`);
-  if (row.severeNegative) notes.push(`存在明显回撤和低胜率风险，建议降权或排除`);
-  if (finite(row.winRatePct) > 0) notes.push(`胜率 ${finite(row.winRatePct).toFixed(1)}%`);
-  return notes.join("；");
+  return walletOneLiner(row);
 }
 
 export function signalGroupLabel(profile) {
@@ -269,11 +364,15 @@ export function isSafeSignalCandidate(row) {
   const pnl = finite(row.totalRealizedPnlUsd);
   const winRate = finite(row.winRatePct);
   const latestAgeHours = finite(row.latestTradeAgeHours, 9999);
+  const valueScore = finite(row.walletValueScore ?? walletValueScore(row));
+  const tier = row.walletTier || walletTier({ ...row, walletValueScore: valueScore });
 
   if (!isPositiveSignalProfile(profile)) return false;
   if (profile === "hot_meme_sniper" && labels.has("high_frequency_rookie")) return false;
   if (pnl < -1000) return false;
   if (winRate > 0 && winRate < 30) return false;
   if (latestAgeHours > 24 * 14) return false;
+  if (tier !== "核心") return false;
+  if (valueScore < 75) return false;
   return true;
 }

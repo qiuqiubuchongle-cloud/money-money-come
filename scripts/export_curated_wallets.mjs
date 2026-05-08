@@ -17,6 +17,9 @@ const curated = profiles
     profile: row.profile,
     profileLabel: row.profileLabel,
     reliabilityScore: finite(row.reliabilityScore),
+    walletValueScore: finite(row.walletValueScore),
+    walletTier: row.walletTier || "",
+    walletStyleLabel: row.walletStyleLabel || "",
     totalRealizedPnlUsd: finite(row.totalRealizedPnlUsd),
     winRatePct: finite(row.winRatePct),
     avgTradesPerDay: finite(row.avgTradesPerDay),
@@ -25,7 +28,8 @@ const curated = profiles
     analysisSummary: row.analysisSummary || "",
   }))
   .sort((a, b) => (
-    b.reliabilityScore - a.reliabilityScore
+    b.walletValueScore - a.walletValueScore
+    || b.reliabilityScore - a.reliabilityScore
     || b.totalRealizedPnlUsd - a.totalRealizedPnlUsd
     || b.winRatePct - a.winRatePct
   ));
