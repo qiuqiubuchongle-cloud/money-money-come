@@ -2,7 +2,7 @@
 
 > 多链聪明钱画像与分组信号引擎。把你收藏的聪明钱地址，整理成可评分、可分组、可监控、可推送的个人链上研究系统。
 
-`Money Money Come` 是一个面向 meme 扫链用户、链上研究员和 Agent 工作流的公开 Skill。它基于 **OnchainOS / OKX 链上数据能力**，支持 BSC 与 Solana 聪明钱地址画像、质量分层、分组管理、观察池导出、OKX Signal 辅助确认和 Telegram 信号提醒。
+`Money Money Come` 是一个面向 meme 扫链用户、链上研究员和 Agent 工作流的公开 Skill。它基于 **OnchainOS / OKX 链上数据能力**，支持 BSC 与 Solana 聪明钱地址画像、质量分层、分组管理、观察池导出、私有地址池共振提醒，以及 OKX 官方 Signal 原样转发。
 
 它默认只做 **分析、整理、提醒和模拟观察**，不会自动交易，不托管私钥，不承诺收益。
 
@@ -31,7 +31,7 @@
   -> 自动分组与筛选
   -> 生成 safeSignalPool
   -> 按你的规则监控同组集中买入
-  -> 结合 OKX 官方 Signal 做辅助确认
+  -> OKX 官方 Signal 单独原样转发
   -> 推送 Telegram 可读信号卡
 ```
 
@@ -155,17 +155,17 @@ npm run export-curated
 
 默认逻辑：
 
-- 同一正向分组内 `2` 个核心钱包，在 `10` 分钟内买入同一 token，触发正式信号
+- 同一正向分组内 `3` 个核心钱包，在 `2` 分钟内买入同一 token，触发正式信号
 - 同一正向分组内 `3` 个核心钱包，标记为强信号
 - 多个分组同时达标，标记为多组强信号
 - 不同组各 1 个地址买入，只作为观察，不默认推送正式信号
 
 你可以把这个规则改成自己的版本，例如：
 
-- 热点组：2 个钱包 / 10 分钟内买入就提醒
+- 热点组：3 个钱包 / 2 分钟内买入就提醒
 - 盈利组：3 个钱包 / 20 分钟内买入才提醒
 - 百倍组：2 个钱包 / 5 分钟内买入，并且市值低于 30 万才提醒
-- OKX 官方 Signal：至少 8 个触发钱包，市值低于 50 万才提醒
+- OKX 官方 Signal：按 OnchainOS / OKX 返回内容原样转发，只额外加一行备注
 
 ## 自定义配置：你决定什么叫信号
 
@@ -180,9 +180,9 @@ cp config/signal-rules.example.json config/signal-rules.json
 ```json
 {
   "private": {
-    "minWallets": 2,
+    "minWallets": 3,
     "strongMinWallets": 3,
-    "windowMs": 600000,
+    "windowMs": 120000,
     "sameGroupRequired": true,
     "crossGroupObserve": true
   }
@@ -191,9 +191,9 @@ cp config/signal-rules.example.json config/signal-rules.json
 
 这段配置的意思是：
 
-- `minWallets=2`：同一组内至少 2 个核心钱包买入，才触发正式提醒
+- `minWallets=3`：同一组内至少 3 个核心钱包买入，才触发正式提醒
 - `strongMinWallets=3`：同一组内 3 个核心钱包买入，标记为强信号
-- `windowMs=600000`：统计窗口是 10 分钟
+- `windowMs=120000`：统计窗口是 2 分钟
 - `sameGroupRequired=true`：必须是同一正向分组内的钱包集中买入
 - `crossGroupObserve=true`：不同组同时出现买入时，记录为跨组观察
 
@@ -230,17 +230,23 @@ cp config/signal-rules.example.json config/signal-rules.json
 你也可以用环境变量覆盖：
 
 ```bash
-MIN_PRIVATE_WALLETS=2
+MIN_PRIVATE_WALLETS=3
 STRONG_PRIVATE_WALLETS=3
-PRIVATE_WINDOW_MS=600000
+PRIVATE_WINDOW_MS=120000
 PRIVATE_SAME_GROUP_REQUIRED=1
 ```
 
-## OKX 官方 Signal 辅助提醒
+## OKX 官方 Signal 原样转发
 
-OnchainOS / OKX 提供 Smart Money / KOL / Whale 的聚合 Signal 数据，Skill 可以把它作为第二条信号通道。
+OnchainOS / OKX 提供 Smart Money / KOL / Whale 的聚合 Signal 数据，Skill 会把它作为第二条信号通道转发到 Telegram。
 
-需要说明：`6 个触发钱包 / 50 万市值` 不是 OKX 官方强制标准，而是本 Skill 默认的降噪策略。OKX 提供信号数据和过滤参数，实际提醒阈值由你决定。
+这一通道和你的私有聪明钱地址池是分开的：
+
+- 私有地址池：按你设置的“几分钟内、同组几个钱包买入”触发
+- OKX 官方 Signal：按 `onchainos signal list` 返回的 Signal 转发
+- TG 文案会额外备注：这条不代表你的私有地址池已经同组共振
+
+需要说明：`6 个触发钱包 / 50 万市值` 不是 OKX 官方固定标准。OKX 提供 Signal 数据和过滤参数，是否加本地降噪由你决定。
 
 默认配置：
 
@@ -248,21 +254,22 @@ OnchainOS / OKX 提供 Smart Money / KOL / Whale 的聚合 Signal 数据，Skill
 {
   "okxOfficial": {
     "enabled": true,
-    "soloAlert": true,
-    "walletTypes": "1,3",
+    "forward": true,
+    "walletTypes": "",
     "limit": 30,
-    "minTriggerWallets": 6,
-    "maxMarketCapUsd": 500000,
-    "minCompositeScore": 3
+    "applyLocalFilters": false
   }
 }
 ```
 
-你可以继续加过滤项：
+含义：默认不在本地二次筛选 OKX 官方 Signal，只做轻格式化和备注。
+
+如果你想减少 OKX 转发噪音，可以打开本地过滤：
 
 ```json
 {
   "okxOfficial": {
+    "applyLocalFilters": true,
     "minTriggerWallets": 8,
     "minAmountUsd": 1000,
     "maxMarketCapUsd": 300000,
@@ -272,7 +279,7 @@ OnchainOS / OKX 提供 Smart Money / KOL / Whale 的聚合 Signal 数据，Skill
 }
 ```
 
-含义：只有 OKX Signal 中至少 8 个钱包触发、交易额过线、市值和流动性符合要求、触发钱包没有明显大量卖出时，才推送。
+含义：只有 OKX Signal 中至少 8 个钱包触发、交易额过线、市值和流动性符合要求、触发钱包没有明显大量卖出时，才转发。
 
 官方文档入口：
 
@@ -283,7 +290,7 @@ OnchainOS / OKX 提供 Smart Money / KOL / Whale 的聚合 Signal 数据，Skill
 
 ![Telegram Wallet Card Demo](./assets/tg-wallet-card-demo.svg)
 
-信号卡会尽量少堆数据，把核心判断讲清楚：
+私有地址池信号卡会尽量少堆数据，把核心判断讲清楚：
 
 ```text
 🚨 BSC 分组信号
@@ -291,7 +298,7 @@ OnchainOS / OKX 提供 Smart Money / KOL / Whale 的聚合 Signal 数据，Skill
 🪙 TOKEN ｜ Token Name
 📌 等级：强信号 ｜ 热点组 ｜ 情绪分 5.8
 🔗 合约：0x...
-📡 来源：private + okx
+📡 来源：private
 
 📊 市场数据
 • 市值：$320.0K
@@ -299,11 +306,28 @@ OnchainOS / OKX 提供 Smart Money / KOL / Whale 的聚合 Signal 数据，Skill
 • 持有人：142
 
 🧠 聪明钱触发
-• 触发地址：2 个
+• 触发地址：3 个
 • 触发模式：热点组同组共振
-• OKX Signal：官方聚合触发钱包 8 个，阈值 6 个
 
 ⚠️ 默认仅分析和提醒，不代表实盘建议。
+```
+
+OKX 官方 Signal 会是另一张卡：
+
+```text
+📡 OKX 官方 Signal
+
+🪙 TOKEN ｜ Token Name
+🔗 合约：0x...
+🏷 钱包类型：Smart Money
+
+📊 OKX Signal 原始字段
+• 触发钱包：15
+• 买入金额：$12.3K
+• 市值：$420.0K
+
+📝 备注：OKX 官方 Signal 原样转发；这条不代表你的私有聪明钱地址池已经同组共振。
+⚠️ 仅供观察，不构成买入建议。
 ```
 
 ## 安装

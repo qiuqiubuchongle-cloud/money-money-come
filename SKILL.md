@@ -195,23 +195,23 @@ Key fields:
 - `private.minWallets`: how many private safe wallets must buy the same token
 - `private.windowMs`: concentration window
 - `private.sameGroupRequired`: require same positive group before formal alert
-- `okxOfficial.enabled`: include OKX official Signal feed
-- `okxOfficial.soloAlert`: allow OKX official Signal to alert even without private grouped confirmation
-- `okxOfficial.minTriggerWallets`: minimum OKX aggregated trigger wallet count
-- `okxOfficial.maxMarketCapUsd`, `minAmountUsd`, `minLiquidityUsd`: optional OnchainOS `signal list` pre-filters
-- `okxOfficial.maxSoldRatioPercent`: local filter to avoid signals where trigger wallets have mostly exited
+- `okxOfficial.enabled`: read the OKX official Signal feed
+- `okxOfficial.forward`: forward OKX official Signal rows to Telegram as their own channel
+- `okxOfficial.applyLocalFilters`: optionally apply local noise filters before forwarding OKX official Signal rows
+- `okxOfficial.minTriggerWallets`, `maxMarketCapUsd`, `minAmountUsd`, `minLiquidityUsd`: optional OnchainOS `signal list` filters
+- `okxOfficial.maxSoldRatioPercent`: optional local filter when `applyLocalFilters=true`
 
 Environment variables override JSON:
 
 ```bash
-MIN_PRIVATE_WALLETS=2
-PRIVATE_WINDOW_MS=600000
+MIN_PRIVATE_WALLETS=3
+PRIVATE_WINDOW_MS=120000
 OKX_OFFICIAL_SIGNAL_ENABLED=1
-OKX_OFFICIAL_SOLO_ALERT=1
-OKX_SIGNAL_MIN_WALLETS=6
+OKX_OFFICIAL_FORWARD_ENABLED=1
+OKX_OFFICIAL_APPLY_LOCAL_FILTERS=0
 ```
 
-Important: `OKX_SIGNAL_MIN_WALLETS=6` and `OKX_SIGNAL_MAX_MARKET_CAP_USD=500000` are this skill's default noise-control settings, not official OKX thresholds. OnchainOS provides the Signal feed and filter parameters; the alert policy remains user-configurable.
+Important: private grouped alerts and OKX official Signal are separate channels. Private alerts use the user's safe wallet pool and same-group concentration rules. OKX official Signal should be forwarded as-is with an added remark, unless the user explicitly enables local filtering. Do not treat OKX official Signal as proof that the user's private smart-wallet group has converged.
 
 GMGN / Binance data sources are optional enhancers. The baseline workflow should still be useful with:
 
@@ -219,7 +219,7 @@ GMGN / Binance data sources are optional enhancers. The baseline workflow should
 - OKX profile generation
 - group generation
 - Telegram alerts from the safe pool
-- OKX official Signal alerts when enabled
+- OKX official Signal forwarding when enabled
 
 ### 7. OKX API setup
 
@@ -276,9 +276,9 @@ For future monitoring, grouped alerts should only trigger when:
 - multiple wallets from the same **safe** positive group
 - buy the same token
 - inside the configured time window
-- default formal signal threshold is configurable; recommended baseline is `>= 2` core wallets from the same positive group
-- strong signal threshold is configurable; recommended baseline is `>= 3` same-group core wallets, or `>= 2` with an external OKX/GMGN/Four.meme/Binance confirmation
-- OKX official Signal may alert independently when `OKX_OFFICIAL_SOLO_ALERT=1` and the OKX trigger wallet threshold is met
+- default formal signal threshold is configurable; recommended baseline is `>= 3` core wallets from the same positive group within 2 minutes
+- strong signal threshold is configurable; recommended baseline is `>= 3` same-group core wallets, optionally with separate market/risk confirmations
+- OKX official Signal should be sent in a separate `OKX 官方 Signal` Telegram card, with a remark that it is not a private-pool grouped signal
 
 Alert payload should include:
 

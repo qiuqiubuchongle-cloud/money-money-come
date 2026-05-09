@@ -9,9 +9,9 @@
 | 通道 | 作用 | 默认状态 |
 | --- | --- | --- |
 | 私有聪明钱地址池 | 监控你自己筛选出的 `safeSignalPool`，当同组核心地址集中买入时提醒 | 开启 |
-| OKX 官方 Signal | 读取 OKX 聚合聪明钱 / 鲸鱼信号，可作为外部确认，也可独立提醒 | 开启 |
+| OKX 官方 Signal | 读取 OKX 聚合聪明钱 / KOL / 鲸鱼 Signal，原样转发到 TG，并追加备注 | 开启 |
 
-GMGN、Four.meme、Binance 是可选增强源。首次部署建议先保持关闭，等私有地址池和 OKX 官方 Signal 跑稳定后再接入。
+GMGN、Four.meme、Binance 是可选增强源。首次部署建议先保持关闭，等私有地址池和 OKX 官方 Signal 转发跑稳定后再接入。
 
 ## 当前核心观察池
 
@@ -40,55 +40,57 @@ cp config/signal-rules.example.json config/signal-rules.json
 ```json
 {
   "private": {
-    "minWallets": 2,
+    "minWallets": 3,
     "strongMinWallets": 3,
-    "windowMs": 600000,
+    "windowMs": 120000,
     "sameGroupRequired": true,
     "crossGroupObserve": true
   },
   "okxOfficial": {
     "enabled": true,
-    "soloAlert": true,
-    "walletTypes": "1,3",
+    "forward": true,
+    "walletTypes": "",
     "limit": 30,
-    "minTriggerWallets": 6,
+    "minTriggerWallets": "",
     "maxTriggerWallets": "",
     "minAmountUsd": "",
     "maxAmountUsd": "",
     "minMarketCapUsd": "",
-    "maxMarketCapUsd": 500000,
+    "maxMarketCapUsd": "",
     "minLiquidityUsd": "",
     "maxLiquidityUsd": "",
     "minHolders": 0,
     "maxTop10HolderPercent": 0,
     "maxSoldRatioPercent": 100,
-    "minCompositeScore": 3
+    "minCompositeScore": 3,
+    "applyLocalFilters": false
   }
 }
 ```
 
 常用调参：
 
-- 想更保守：把 `private.minWallets` 改成 `3`
-- 想更敏感：保持 `private.minWallets=2`，并扩大核心地址池
+- 想更保守：保持 `private.minWallets=3`，或把 `windowMs` 缩短到 120000
+- 想更敏感：把 `private.minWallets` 改成 `2`，或把 `windowMs` 放宽到 600000
 - 只想要同组信号：保持 `private.sameGroupRequired=true`
-- 想看 OKX 官方信号：保持 `okxOfficial.enabled=true` 与 `okxOfficial.soloAlert=true`
-- 想减少 OKX 信号：提高 `okxOfficial.minTriggerWallets`，例如改成 `8`
+- 想让 OKX 官方信号原样转发：保持 `okxOfficial.enabled=true`、`okxOfficial.forward=true`、`applyLocalFilters=false`
+- 想减少 OKX 转发噪音：把 `applyLocalFilters` 改成 `true`，再设置 `minTriggerWallets`、`maxMarketCapUsd` 等过滤项
 
-`minTriggerWallets=6` 和 `maxMarketCapUsd=500000` 是本 Skill 的默认策略，不是 OKX 官方固定标准。OKX / OnchainOS 提供 Signal 数据和可选过滤参数，实际提醒阈值可以按你的风险偏好调整。
+`minTriggerWallets=6` 和 `maxMarketCapUsd=500000` 不是 OKX 官方固定标准。OKX / OnchainOS 提供 Signal 数据和可选过滤参数，实际提醒阈值可以按你的风险偏好调整。
 
 服务器也支持用环境变量覆盖 JSON：
 
 ```bash
-MIN_PRIVATE_WALLETS=2
-PRIVATE_WINDOW_MS=600000
+MIN_PRIVATE_WALLETS=3
+PRIVATE_WINDOW_MS=120000
 STRONG_PRIVATE_WALLETS=3
 OKX_OFFICIAL_SIGNAL_ENABLED=1
-OKX_OFFICIAL_SOLO_ALERT=1
-OKX_SIGNAL_MIN_WALLETS=6
+OKX_OFFICIAL_FORWARD_ENABLED=1
+OKX_OFFICIAL_APPLY_LOCAL_FILTERS=0
+OKX_SIGNAL_MIN_WALLETS=
 OKX_SIGNAL_MIN_AMOUNT_USD=
 OKX_SIGNAL_MIN_LIQUIDITY_USD=
-OKX_SIGNAL_MAX_MARKET_CAP_USD=500000
+OKX_SIGNAL_MAX_MARKET_CAP_USD=
 OKX_SIGNAL_MAX_SOLD_RATIO_PERCENT=100
 ```
 
@@ -157,7 +159,7 @@ chmod +x deploy/run-server-monitor.sh
 看到类似日志说明监控已启动：
 
 ```text
-[monitor] BSC signal + paper monitor started. safeAddresses=10, privateMin=2, okxOfficial=on(min=6, solo=on)
+[monitor] BSC signal + paper monitor started. safeAddresses=10, poll=60000ms, privateMin=3, privateWindow=120000ms, okxOfficial=on(forward=on, localFilters=off)
 ```
 
 第一次启动会先记录当前状态，后续新出现的匹配信号才会推送，避免把历史旧交易误当成新信号。
@@ -192,7 +194,7 @@ sudo systemctl stop money-money-come
 
 ## Telegram 信号格式
 
-触发后会发送类似这种 HTML 消息：
+私有地址池触发后会发送类似这种 HTML 消息：
 
 ```text
 🚨 BSC 分组信号
@@ -200,7 +202,7 @@ sudo systemctl stop money-money-come
 🪙 TOKEN ｜ Token Name
 📌 等级：强信号 ｜ 热点组 ｜ 情绪分 5.8
 🔗 合约：0x...
-📡 来源：private + okx
+📡 来源：private
 
 📊 市场数据
 • 市值：$320.0K
@@ -208,9 +210,25 @@ sudo systemctl stop money-money-come
 • 持有人：142
 
 🧠 聪明钱触发
-• 触发地址：2 个
+• 触发地址：3 个
 • 触发模式：热点组同组共振
-• OKX Signal：官方聚合触发钱包 8 个，阈值 6 个
+```
+
+OKX 官方 Signal 是单独的转发卡：
+
+```text
+📡 OKX 官方 Signal
+
+🪙 TOKEN ｜ Token Name
+🔗 合约：0x...
+🏷 钱包类型：Smart Money
+
+📊 OKX Signal 原始字段
+• 触发钱包：15
+• 买入金额：$12.3K
+• 市值：$420.0K
+
+📝 备注：OKX 官方 Signal 原样转发；这条不代表你的私有聪明钱地址池已经同组共振。
 ```
 
 ## 为什么没有 Telegram 信号
@@ -219,11 +237,11 @@ sudo systemctl stop money-money-come
 
 - 私有地址池没有同组核心钱包集中买入
 - 同一 token 的买入超过了时间窗口
-- OKX 官方 Signal 未达到触发钱包阈值
+- OKX 官方 Signal 没有新返回，或你开启了本地过滤但未达到阈值
 - 代币市值、流动性、持有人或风险过滤未通过
 - 首次启动处于 seeded 状态，只记录当前状态，不推历史信号
 
-想提高信号密度，优先扩大高质量地址池；其次再调整 `private.minWallets`、`windowMs` 或 OKX 官方 Signal 阈值。
+想提高私有池信号密度，优先扩大高质量地址池；其次再调整 `private.minWallets` 或 `windowMs`。想减少 OKX 转发噪音，再开启 `OKX_OFFICIAL_APPLY_LOCAL_FILTERS=1`。
 
 ## 安全边界
 

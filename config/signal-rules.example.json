@@ -1,27 +1,28 @@
 {
   "private": {
-    "minWallets": 2,
+    "minWallets": 3,
     "strongMinWallets": 3,
-    "windowMs": 600000,
+    "windowMs": 120000,
     "sameGroupRequired": true,
     "crossGroupObserve": true
   },
   "okxOfficial": {
     "enabled": true,
-    "soloAlert": true,
-    "walletTypes": "1,3",
+    "forward": true,
+    "walletTypes": "",
     "limit": 30,
-    "minTriggerWallets": 6,
+    "minTriggerWallets": "",
     "maxTriggerWallets": "",
     "minAmountUsd": "",
     "maxAmountUsd": "",
     "minMarketCapUsd": "",
-    "maxMarketCapUsd": 500000,
+    "maxMarketCapUsd": "",
     "minLiquidityUsd": "",
     "maxLiquidityUsd": "",
     "minHolders": 0,
     "maxTop10HolderPercent": 0,
     "maxSoldRatioPercent": 100,
-    "minCompositeScore": 3
+    "minCompositeScore": 3,
+    "applyLocalFilters": false
   }
 }
