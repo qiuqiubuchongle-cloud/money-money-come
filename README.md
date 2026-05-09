@@ -1,183 +1,206 @@
 # Money Money Come
 
-> 链上聪明钱画像 Skill：把你收藏的一堆钱包地址，整理成可筛选、可分组、可提醒的个性化信号池。
+> 多链聪明钱画像与分组信号引擎。把你收藏的一堆钱包地址，升级成可评分、可分组、可复盘、可推送的链上研究系统。
 
-`money-money-come` 是一个基于 **OnchainOS + OKX 官方链上画像能力** 的 BSC / Solana 聪明钱分析 Skill。  
-它默认只做地址画像、分组筛选和 Telegram 信号提醒，不会自动交易。
+`Money Money Come` 是一个面向 meme 扫链用户、链上研究员和 Agent 工作流的公开 Skill。它基于 **OnchainOS / OKX 链上数据能力**，帮助 Agent 自动完成 BSC 与 Solana 聪明钱地址画像、质量分层、分组管理、观察池导出和 Telegram 信号提醒。
+
+它的默认边界很清楚：**只做分析、整理、提醒和模拟观察，不自动交易，不托管私钥，不承诺收益。**
 
 ![Money Money Come Flow](./assets/money-money-come-flow.svg)
 
-## 思考来源：用户真正痛在哪里
+## 一句话定位
 
-很多扫链用户并不是没有地址，而是地址太多。
+如果你已经积累了很多“看起来很聪明”的钱包地址，但不知道哪些还活跃、哪些真的能赚、哪些只是噪音，`Money Money Come` 会把这些地址整理成一套可持续迭代的个人链上雷达。
 
-常见痛点是：
+它不是把所有买入都推给你，而是回答三个更重要的问题：
 
-- 收藏夹越来越大，但不知道哪个地址还值得盯
-- 地址备注很随意，过几天就忘了当初为什么收藏
-- 休眠地址、亏损地址、噪音地址混在一起，手动清理很累
-- 有些地址确实很聪明，但单独看一笔交易又容易误判
-- 自定义分组靠人工维护，越用越乱
-- Telegram 提醒如果只是原始成交流水，很快就变成噪音
+| 问题 | Skill 做什么 |
+| --- | --- |
+| 这个地址值不值得盯？ | 生成 PnL、胜率、交易节奏、低市值偏好、代表盈利和风格标签 |
+| 我的地址池怎么分组？ | 按盈利型、百倍型、热点型、加仓型、观察型、噪音型、休眠型自动归类 |
+| 什么时候值得提醒？ | 当同组核心钱包集中买入，或 OKX 官方 Signal 达到阈值时推送 TG |
 
-所以这个 Skill 的目标不是“多推送几个买入”，而是先帮用户把地址列表整理成一个更干净的信号系统。
+## 为什么需要它
 
-## 功能核心
+很多扫链用户的问题不是“没有地址”，而是“地址太多”。
 
-### 1. 单地址画像
+常见痛点包括：
 
-输入一个 BSC 或 Solana 钱包地址，Skill 会基于 OKX 官方链上画像接口，输出一份简洁地址报告：
+- 收藏夹越来越大，真正值得跟踪的地址越来越少
+- 当时随手标记的钱包，过几天就忘了为什么收藏
+- 长期休眠地址、亏损地址、噪音地址混在一起，手动清理很累
+- 单个钱包偶尔买入不一定有意义，但同类钱包一起买入往往更值得看
+- Telegram 如果只推原始成交流水，很快就会变成噪音
+- BSC 和 Solana 地址分开维护，人工切换成本高
 
-- 已实现收益
-- 胜率
-- 最近活跃时间
-- 交易节奏
+`Money Money Come` 的核心思路是：先把钱包质量判断清楚，再谈信号。只有经过筛选、分组和规则确认的地址，才进入正式提醒逻辑。
+
+## 核心能力
+
+### 1. BSC / Solana 双链地址画像
+
+输入单个钱包地址，或导入一批 GMGN 风格地址列表，Skill 会为每个地址生成一份画像：
+
+- 已实现收益与代表盈利
+- 胜率、盈利 token 数、交易样本
+- 最近活跃时间和交易节奏
 - 低市值 meme 偏好
-- 代表盈利
 - 地址风格标签
+- 价值分与层级
 - 是否适合进入核心观察池
 
-示例风格：
+示例输出风格：
 
 ```text
-链上小旋风｜叙事捕手｜热点组｜核心
-擅长捕捉叙事，出手不算密但命中感不错；低市值偏好强，适合作为同组共振观察地址。
+链上小旋风｜热点组｜观察
+擅长捕捉叙事，低市值偏好强，代表盈利亮眼；但胜率还不算稳，适合放进 SOL 热点观察池，等同组共振再提高权重。
 ```
 
-### 2. 批量地址筛选
+### 2. 地址质量评分
 
-导入 GMGN 风格的钱包列表后，Skill 会批量生成画像，并把地址分成：
+Skill 会生成 `walletValueScore`，满分 100。它不是简单按收益排序，而是综合判断地址是否适合被跟踪。
 
-- 核心：可进入正式信号池
-- 观察：有亮点，但需要更多确认
-- 降权：有噪音或稳定性不足
-- 剔除：休眠、样本太薄或质量不够
-
-### 3. 聪明钱分组
-
-Skill 会把地址归到更容易理解的风格组：
-
-- `热点组`：擅长捕捉热点轮动
-- `百倍组`：偏早期、偏低市值、爆发弹性更强
-- `盈利组`：历史收益更稳定
-- `加仓组`：同一标的反复加仓，有信仰型行为
-- `观察组`：样本还不够，需要继续跟踪
-- `噪音组 / 休眠组`：默认不进入核心提醒
-
-### 4. 分组集中买入提醒
-
-真正有价值的不是“某一个地址买了”，而是：
-
-> 同一正向分组里，多个高质量地址在同一时间窗口内买入同一个 meme。
-
-默认提醒规则：
-
-- `>= 2` 个同组核心地址买入：正式信号
-- `>= 3` 个同组核心地址买入：强信号
-- `2 个同组核心 + OKX / GMGN / Four.meme / Binance 辅助确认`：强信号
-- `2 个及以上分组都达到同组阈值`：多组强信号
-- `不同组各 1 个地址买入`：只算跨组观察，不作为正式推送依据
-
-这样可以减少单钱包误触发，让提醒更像“情绪共振”，而不是链上流水。
-
-### 5. Telegram 画像卡与信号卡
-
-TG 消息默认展示少量关键数据：
-
-- 地址标签
-- 价值分
-- 核心结论
-- 已实现收益
-- 胜率
-- 最近活跃
-- 低市值偏好
-- 代表盈利
-- 跟踪建议
-
-亏损列表不会默认展示在 TG 卡片里，避免信息过载。更细的数据仍保留在本地 JSON 报告中，方便深度复盘。
-
-## 聪明钱评分规则
-
-Skill 会生成一个 `walletValueScore`，满分 100。它不是单纯按收益排序，而是综合判断地址是否值得被跟踪。
-
-主要维度：
-
-| 维度 | 看什么 | 作用 |
+| 维度 | 观察重点 | 目的 |
 | --- | --- | --- |
-| 盈利能力 | 已实现 PnL、平均盈利 | 判断地址是否真的赚到钱 |
-| 稳定性 | 胜率、盈利 token 数、亏损分布 | 防止偶然暴赚掩盖长期乱冲 |
+| 盈利能力 | 已实现 PnL、平均盈利、代表盈利 | 判断是否真的赚到钱 |
+| 稳定性 | 胜率、盈利 token 数、亏损分布 | 防止一次暴赚掩盖长期乱冲 |
 | 活跃度 | 最近交易时间、近期活跃天数 | 剔除长期休眠地址 |
 | Meme 适配度 | 低市值买入占比、入场市值中位数 | 判断是否适合 meme 扫链 |
 | 样本质量 | 交易数、参与 token 数 | 避免样本太薄就高估 |
-| 可跟随性 | 平均买入金额、交易节奏 | 过滤过大资金或噪音节奏 |
+| 可跟随性 | 平均买入金额、交易节奏 | 过滤过大资金或高频噪音 |
 
-默认分层：
+默认层级：
 
-| 层级 | 默认含义 |
+| 层级 | 含义 |
 | --- | --- |
-| 核心 | 分数高、近期活跃、收益为正、胜率过线、样本足够 |
-| 观察 | 有亮点，但还需要同组确认 |
-| 降权 | 有一定价值，但稳定性或样本不足 |
-| 剔除 | 休眠、亏损严重、噪音过高或样本太薄 |
+| 核心 | 分数高、近期活跃、收益为正、样本较足，允许进入正式信号池 |
+| 观察 | 有亮点，但还需要更多样本或同组确认 |
+| 降权 | 有一定价值，但稳定性不足或噪音偏高 |
+| 剔除 | 休眠、亏损明显、样本太薄或不适合作为信号来源 |
 
-默认安全池规则更严格：只有正向分组中的 `核心` 地址，才会进入正式提醒逻辑。
+### 3. 聪明钱风格分组
 
-## 自定义调整
+钱包会被归入更容易理解的行为组：
 
-你可以通过环境变量调整策略，不需要改代码。
+| 分组 | 典型特征 |
+| --- | --- |
+| 热点组 | 擅长捕捉热点轮动，出手更偏叙事和情绪 |
+| 百倍组 | 偏早期、偏低市值，弹性更高但波动也更大 |
+| 盈利组 | 历史收益更稳，适合作为核心确认来源 |
+| 加仓组 | 同一标的反复加仓，有信仰型行为 |
+| 观察组 | 有亮点但还不够稳定，需要继续跟踪 |
+| 噪音组 / 休眠组 | 默认不进入正式提醒池 |
 
-常用项：
+### 4. 私有地址池分组信号
+
+正式信号不是“某个钱包买了”，而是“符合你规则的钱包共振了”。
+
+默认规则：
+
+- 同一正向分组内 `>= 2` 个核心钱包，在 `10` 分钟内买入同一 token，触发正式信号
+- 同一正向分组内 `>= 3` 个核心钱包，标记为强信号
+- 多个分组同时达标，标记为多组强信号
+- 不同组各 1 个地址买入，只作为跨组观察，默认不当作正式信号
+
+这些阈值可以自定义。你可以把它改成更激进的 `2 个钱包提醒`，也可以改成更保守的 `3 个钱包才提醒`。
+
+### 5. OKX 官方 Signal 通道
+
+除了你自己的私有地址池，监控器还可以接入 OKX 官方 Signal：
+
+- 读取 OKX 聚合聪明钱 / 鲸鱼买入信号
+- 根据触发钱包数、代币市值、组合分数做过滤
+- 可作为私有地址池的外部确认源
+- 也可以开启“OKX 官方独立提醒”，不依赖你的私有地址池同组共振
+
+默认配置：
+
+- `OKX_OFFICIAL_SIGNAL_ENABLED=1`
+- `OKX_OFFICIAL_SOLO_ALERT=1`
+- `OKX_SIGNAL_MIN_WALLETS=6`
+- `OKX_SIGNAL_MAX_MARKET_CAP_USD=500000`
+
+这能解释为什么有时 Telegram 没有信号：如果你的私有地址池没有同组共振，系统不会硬推噪音；开启 OKX 官方独立提醒后，信号来源会更宽，但仍然经过基础过滤。
+
+## 自定义信号规则
+
+最推荐的方式是复制规则模板：
 
 ```bash
-OKX_PROFILE_TIME_FRAME_DAYS=3
-SMART_WALLET_CHAIN=bsc
-POLL_MS=60000
+cp config/signal-rules.example.json config/signal-rules.json
+```
+
+然后编辑：
+
+```json
+{
+  "private": {
+    "minWallets": 2,
+    "strongMinWallets": 3,
+    "windowMs": 600000,
+    "sameGroupRequired": true,
+    "crossGroupObserve": true
+  },
+  "okxOfficial": {
+    "enabled": true,
+    "soloAlert": true,
+    "walletTypes": "1,3",
+    "limit": 30,
+    "minTriggerWallets": 6,
+    "maxMarketCapUsd": 500000,
+    "minCompositeScore": 3
+  }
+}
+```
+
+常见调法：
+
+| 需求 | 改什么 |
+| --- | --- |
+| 信号太少 | 扩大地址池，或把 `private.minWallets` 从 3 调回 2 |
+| 信号太多 | 把 `private.minWallets` 改为 3，提高 `okxOfficial.minTriggerWallets` |
+| 更重视同组逻辑 | 保持 `sameGroupRequired=true` |
+| 想看跨组共振 | 开启 `crossGroupObserve=true`，但建议只作为观察 |
+| 想接收 OKX 官方信号 | 设置 `okxOfficial.enabled=true` 和 `soloAlert=true` |
+
+环境变量也可以覆盖 JSON，适合服务器部署：
+
+```bash
 MIN_PRIVATE_WALLETS=2
 PRIVATE_WINDOW_MS=600000
-GMGN_ENABLED=0
-BINANCE_MEME_RUSH_ENABLED=0
-BINANCE_TOKEN_INFO_ENABLED=0
+STRONG_PRIVATE_WALLETS=3
+OKX_OFFICIAL_SIGNAL_ENABLED=1
+OKX_OFFICIAL_SOLO_ALERT=1
+OKX_SIGNAL_MIN_WALLETS=6
+OKX_SIGNAL_MAX_MARKET_CAP_USD=500000
 ```
 
-建议：
+## Telegram 信号卡
 
-- 新用户先保持 GMGN / Binance 关闭，只跑 OKX + 自己的钱包池
-- 地址池稳定后，再把 GMGN、Four.meme、Binance 作为辅助确认源
-- 不建议降低 `MIN_PRIVATE_WALLETS=2`，单地址买入很容易误报
-
-## BSC / Solana 双链用法
-
-BSC 是默认链。Solana 使用同一套画像、分组、导出逻辑，只需要换命令：
-
-```bash
-npm run sol:import-wallets -- examples/solana_wallets_input.example.json
-npm run sol:profiles
-npm run sol:wallet-groups
-npm run sol:export-curated
-```
-
-Solana 输出文件：
-
-- `data/smart_wallet_profiles_solana.json`
-- `data/smart_wallet_groups_solana.json`
-- `data/curated_smart_wallets_solana.json`
-- `data/curated_smart_wallets_solana.txt`
-
-单地址分析：
-
-```bash
-npm run sol:wallet-report -- <solana-wallet-address>
-```
-
-如果你让 Agent 分析一批 SOL 地址，可以直接说：
+触发后会发送 HTML 格式消息，大致如下：
 
 ```text
-把这批 SOL 聪明钱地址导入 money money come，生成画像、分组和安全观察池。
+🚨 BSC 分组信号
+
+🪙 TOKEN ｜ Token Name
+📌 等级：强信号 ｜ 热点组 ｜ 情绪分 5.8
+🔗 合约：0x...
+📡 来源：private + okx
+
+📊 市场数据
+• 市值：$320.0K
+• 流动性：$18.5K
+• 持有人：142
+
+🧠 聪明钱触发
+• 触发地址：2 个
+• 触发模式：热点组同组共振
+• OKX Signal：官方聚合触发钱包 8 个，阈值 6 个
+
+⚠️ 默认仅分析和提醒，不代表实盘建议。
 ```
 
-Agentic Wallet 负责登录、签名、转账、合约调用等钱包操作；聪明钱画像和链上数据读取，仍然来自 OnchainOS / OKX 的 market、tracker、portfolio 数据接口。换句话说：Agentic Wallet 不是“数据源”，它是“钱包执行层”。
-
-## 安装
+## 快速安装
 
 ```bash
 npx skills add https://github.com/qiuqiubuchongle-cloud/money-money-come
@@ -185,161 +208,88 @@ npx skills add https://github.com/qiuqiubuchongle-cloud/money-money-come
 
 安装后重启 Codex / Agent，让 Skill 生效。
 
-## 服务器信号部署
+## 快速开始
 
-如果你想把核心观察池放到服务器长期运行，使用这套文件：
-
-- `config/server-core-profiles.json`
-- `config/server-core-groups.json`
-- `config/server-core-addresses.txt`
-- `deploy/server.env.example`
-- `deploy/run-server-monitor.sh`
-- `deploy/money-money-come.service`
-
-详细步骤见 [`deploy/README-server.md`](./deploy/README-server.md)。
-
-服务器默认规则是：同一正向分组内至少 `2` 个核心地址在 `10` 分钟内集中买入同一 BSC meme，才给 Telegram 推送提醒。若多个分组同时达到阈值，会标记为“多组强信号”；如果只是不同组各 1 个地址买入，只记录为观察，不作为正式信号。默认只提醒和模拟观察，不自动交易。
-
-## 配置攻略
-
-### 1. 配置 OKX
-
-复制 `.env.example` 为你的本地配置文件，并填写：
-
-```bash
-OKX_API_KEY=...
-OKX_SECRET_KEY=...
-OKX_PASSPHRASE=...
-```
-
-然后登录 OnchainOS：
-
-```bash
-onchainos wallet login
-```
-
-检查状态：
-
-```bash
-onchainos wallet status
-onchainos market portfolio-supported-chains
-```
-
-如果某些地址画像接口报 `timeFrame param error`，优先使用：
-
-```bash
-OKX_PROFILE_TIME_FRAME_DAYS=3
-```
-
-### 2. 配置 Telegram
-
-```bash
-TELEGRAM_BOT_TOKEN=...
-TELEGRAM_CHAT_ID=...
-TELEGRAM_PROXY=
-```
-
-如果网络需要代理，把 `TELEGRAM_PROXY` 设置成你的本地代理地址。
-
-### 3. 导入地址
-
-支持 GMGN 风格 JSON：
-
-```json
-[
-  {
-    "address": "0x...",
-    "name": "optional",
-    "emoji": ""
-  }
-]
-```
-
-导入：
+### BSC 地址分析
 
 ```bash
 npm run import-wallets -- examples/gmgn_wallets_input.example.json
-```
-
-Solana 地址导入：
-
-```bash
-npm run sol:import-wallets -- examples/solana_wallets_input.example.json
-```
-
-仓库里的示例地址只用于说明格式，不代表高质量地址池。
-
-### 4. 构建画像与分组
-
-```bash
-npm run profiles
+OKX_PROFILE_TIME_FRAME_DAYS=3 npm run profiles
 npm run wallet-groups
 npm run export-curated
-```
-
-主要输出：
-
-- `data/smart_wallet_profiles_bsc.json`
-- `data/smart_wallet_groups_bsc.json`
-- `data/curated_smart_wallets_bsc.json`
-- `data/curated_smart_wallets_bsc.txt`
-
-重点看：
-
-- `signalPool`：正向地址池
-- `safeSignalPool`：更严格的安全信号池
-- `excludedSignalPool`：被排除或降权的地址
-
-### 5. 分析单个地址
-
-```bash
 npm run wallet-report -- 0x...
 ```
 
-发送到 Telegram：
+### Solana 地址分析
 
 ```bash
-npm run wallet-report-tg -- 0x...
+npm run sol:import-wallets -- examples/solana_wallets_input.example.json
+OKX_PROFILE_TIME_FRAME_DAYS=3 npm run sol:profiles
+npm run sol:wallet-groups
+npm run sol:export-curated
+npm run sol:wallet-report -- <solana-wallet-address>
 ```
 
-### 6. 开启监控
+Solana 会输出：
 
-```bash
-npm run monitor
+- `data/smart_wallet_profiles_solana.json`
+- `data/smart_wallet_groups_solana.json`
+- `data/curated_smart_wallets_solana.json`
+- `data/curated_smart_wallets_solana.txt`
+
+## 服务器监控
+
+服务器长期运行使用：
+
+- `deploy/server.env.example`
+- `deploy/run-server-monitor.sh`
+- `deploy/money-money-come.service`
+- `config/server-core-profiles.json`
+- `config/server-core-groups.json`
+- `config/server-core-addresses.txt`
+- `config/signal-rules.example.json`
+
+部署步骤见 [`deploy/README-server.md`](./deploy/README-server.md)。
+
+启动后，监控器会读取核心观察池、私有分组规则和 OKX 官方 Signal 配置，持续轮询并把达标信号推送到 Telegram。
+
+## Agentic Wallet 与数据源边界
+
+很多用户会问：使用 Agentic Wallet 能不能直接调用链上数据？
+
+准确说：
+
+- **Agentic Wallet** 更适合做钱包登录、签名、转账、合约调用等执行层能力
+- **OnchainOS / OKX market、tracker、portfolio、signal 接口** 才是本 Skill 读取画像、行情、交易和信号的主要数据源
+
+所以这个 Skill 的推荐架构是：
+
+```text
+用户地址池
+  -> OnchainOS / OKX 数据读取
+  -> Money Money Come 画像评分与分组
+  -> 私有地址池共振 + OKX 官方 Signal
+  -> Telegram 提醒 / 本地 JSON 复盘
 ```
 
-监控会读取已经生成好的画像和分组文件，基于 `safeSignalPool` 做集中买入提醒。
-
-## 为什么没有 Telegram 信号
-
-没有信号通常不是 TG 坏了，而是没有满足正式触发条件。当前服务器默认要求：
-
-- 10 个核心 BSC 地址
-- 同一分组内至少 2 个核心地址
-- 10 分钟内买入同一个合约
-- 通过基础流动性、持有人、合约风险和模拟入场过滤
-
-昨天到今天的诊断结果是：OKX tracker 能拉到这 10 个地址的买入记录，TG 测试也能发送成功；但出现的买入大多是单地址，或者同名不同合约，或者同合约两笔刚好超过 10 分钟窗口，所以没有正式推送。
+如果未来要接入自动买卖，应该单独增加交易前风控、仓位管理、滑点控制、止盈止损和二次确认，而不是把提醒信号直接变成交易指令。
 
 ## 当前边界
 
-- 默认不自动买卖
-- 默认不承诺盈利
-- 默认不把单个地址买入当成正式信号
-- 示例地址不是精选地址池
+- 不保存私钥
+- 不自动买卖
+- 不承诺收益
+- 示例地址只用于格式演示，不是精选地址池
+- Telegram token、OKX key、服务器 `.env` 不会进入公开仓库
 - GMGN / Binance 是可选增强源，不是跑通主流程的必要依赖
 
-## 适合怎么用
+## 适合谁
 
-最推荐的用法是：
-
-1. 先导入你自己长期收藏的钱包地址
-2. 用 OKX 官方画像批量筛选
-3. 把核心地址分成不同风格组
-4. 只跟踪 `safeSignalPool`
-5. 等同组多地址共振，再看是否值得进一步研究
-
-这个 Skill 的价值，不在于替你冲进去买，而在于帮你把杂乱的聪明钱收藏夹，变成一个能持续迭代的链上研究系统。
+- 已经积累大量聪明钱地址，但缺少整理方法的人
+- 想把 BSC / Solana 地址统一做画像的人
+- 想减少 Telegram 噪音，只看更高质量共振提醒的人
+- 想用 Agent 搭建个人链上研究工作流的人
+- 想把“收藏地址”升级为“可复盘信号池”的扫链用户
 
 ## 风险提示
 

@@ -23,6 +23,7 @@ This skill is for building and operating a BSC or Solana smart-money analysis wo
 - Preparing Telegram alert payloads for grouped concentration buys
 - Running a useful baseline workflow with OKX data only, while keeping GMGN / Binance as optional enhancers
 - Running Solana address analysis with `SMART_WALLET_CHAIN=solana` or the `sol:*` npm scripts
+- Configuring private grouped buy rules and OKX official Signal alerts for Telegram
 
 ## Safety Defaults
 
@@ -46,6 +47,7 @@ This skill is for building and operating a BSC or Solana smart-money analysis wo
 - Group report and safe signal pool: `scripts/report_smart_wallet_groups.mjs`
 - Shared helpers and rules: `scripts/lib_smart_wallets.mjs`
 - Existing monitor pipeline: `scripts/monitor_bsc_signals.mjs`
+- Signal rule template: `config/signal-rules.example.json`
 - Setup checklist: `references/setup-checklist.md`
 
 ## Chain Selection
@@ -181,12 +183,38 @@ TELEGRAM_PROXY=...
 
 The monitor should only send grouped alerts from the **safe signal pool**.
 
+Custom signal rules:
+
+```bash
+cp config/signal-rules.example.json config/signal-rules.json
+```
+
+Key fields:
+
+- `private.minWallets`: how many private safe wallets must buy the same token
+- `private.windowMs`: concentration window
+- `private.sameGroupRequired`: require same positive group before formal alert
+- `okxOfficial.enabled`: include OKX official Signal feed
+- `okxOfficial.soloAlert`: allow OKX official Signal to alert even without private grouped confirmation
+- `okxOfficial.minTriggerWallets`: minimum OKX aggregated trigger wallet count
+
+Environment variables override JSON:
+
+```bash
+MIN_PRIVATE_WALLETS=2
+PRIVATE_WINDOW_MS=600000
+OKX_OFFICIAL_SIGNAL_ENABLED=1
+OKX_OFFICIAL_SOLO_ALERT=1
+OKX_SIGNAL_MIN_WALLETS=6
+```
+
 GMGN / Binance data sources are optional enhancers. The baseline workflow should still be useful with:
 
 - wallet import
 - OKX profile generation
 - group generation
 - Telegram alerts from the safe pool
+- OKX official Signal alerts when enabled
 
 ### 7. OKX API setup
 
@@ -243,8 +271,9 @@ For future monitoring, grouped alerts should only trigger when:
 - multiple wallets from the same **safe** positive group
 - buy the same token
 - inside the configured time window
-- default formal signal threshold is `>= 2` core wallets from the same positive group
-- strong signal threshold is `>= 3` same-group core wallets, or `>= 2` with an external OKX/GMGN/Four.meme/Binance confirmation
+- default formal signal threshold is configurable; recommended baseline is `>= 2` core wallets from the same positive group
+- strong signal threshold is configurable; recommended baseline is `>= 3` same-group core wallets, or `>= 2` with an external OKX/GMGN/Four.meme/Binance confirmation
+- OKX official Signal may alert independently when `OKX_OFFICIAL_SOLO_ALERT=1` and the OKX trigger wallet threshold is met
 
 Alert payload should include:
 

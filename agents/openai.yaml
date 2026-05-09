@@ -1,8 +1,8 @@
 interface:
   display_name: "Money Money Come"
-  short_description: "聪明钱地址画像、分组筛选与集中买入信号提醒"
+  short_description: "BSC / Solana 聪明钱画像、分组信号与 OKX Signal 提醒"
   brand_color: "#12161F"
-  default_prompt: "Use $money-money-come to analyze my smart-money wallet list, classify the wallets, and surface grouped meme buy signals from the safe pool."
+  default_prompt: "Use $money-money-come to analyze my BSC or Solana smart-money wallet list, classify wallets by quality and behavior, then configure grouped Telegram alerts plus OKX official Signal reminders."
 
 policy:
   allow_implicit_invocation: true

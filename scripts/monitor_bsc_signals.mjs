@@ -1,18 +1,32 @@
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
 
-const activeAddressesPath = "data/smart_wallets_active_recent_bsc_dex.txt";
+const activeAddressesPath = process.env.SMART_WALLET_ADDRESSES_PATH || "data/smart_wallets_active_recent_bsc_dex.txt";
 const statePath = "data/bsc_signal_monitor_state.json";
 const tradeLogPath = "data/paper_trades.json";
 const okxWsEventsPath = process.env.OKX_WS_EVENTS_PATH || "data/okx_ws_events.ndjson";
 const smartWalletProfilesPath = process.env.SMART_WALLET_PROFILES_PATH || "data/smart_wallet_profiles_bsc.json";
 const smartWalletGroupsPath = process.env.SMART_WALLET_GROUPS_PATH || "data/smart_wallet_groups_bsc.json";
+const signalRulesPath = process.env.SIGNAL_RULES_PATH || "config/signal-rules.json";
+const signalRules = loadSignalRules(signalRulesPath);
+const privateRules = signalRules.private || {};
+const okxOfficialRules = signalRules.okxOfficial || {};
 
-const pollMs = Number(process.env.POLL_MS || 60_000);
+const pollMs = envNumber("POLL_MS", 60_000);
 const paperSizeUsd = Number(process.env.PAPER_SIZE_USD || 10);
-const privateWindowMs = Number(process.env.PRIVATE_WINDOW_MS || 10 * 60_000);
-const minPrivateWallets = Number(process.env.MIN_PRIVATE_WALLETS || 2);
-const allowOfficialSoloSignal = process.env.ALLOW_OFFICIAL_SOLO_SIGNAL === "1";
+const privateWindowMs = envNumber("PRIVATE_WINDOW_MS", privateRules.windowMs ?? 10 * 60_000);
+const minPrivateWallets = envNumber("MIN_PRIVATE_WALLETS", privateRules.minWallets ?? 2);
+const strongPrivateWallets = envNumber("STRONG_PRIVATE_WALLETS", privateRules.strongMinWallets ?? Math.max(3, minPrivateWallets + 1));
+const sameGroupRequired = envBool("PRIVATE_SAME_GROUP_REQUIRED", privateRules.sameGroupRequired !== false);
+const crossGroupObserveEnabled = envBool("CROSS_GROUP_OBSERVE_ENABLED", privateRules.crossGroupObserve !== false);
+const okxOfficialSignalEnabled = envBool("OKX_OFFICIAL_SIGNAL_ENABLED", okxOfficialRules.enabled !== false);
+const okxOfficialSoloAlert = envBool("OKX_OFFICIAL_SOLO_ALERT", okxOfficialRules.soloAlert === true);
+const allowOfficialSoloSignal = okxOfficialSoloAlert || envBool("ALLOW_OFFICIAL_SOLO_SIGNAL", false);
+const okxSignalWalletTypes = process.env.OKX_SIGNAL_WALLET_TYPES || String(okxOfficialRules.walletTypes || "1,3");
+const okxSignalLimit = envNumber("OKX_SIGNAL_LIMIT", okxOfficialRules.limit ?? 30);
+const okxSignalMinWallets = envNumber("OKX_SIGNAL_MIN_WALLETS", okxOfficialRules.minTriggerWallets ?? 6);
+const okxSignalMaxMarketCapUsd = envNumber("OKX_SIGNAL_MAX_MARKET_CAP_USD", okxOfficialRules.maxMarketCapUsd ?? 500_000);
+const okxSignalMinCompositeScore = envNumber("OKX_SIGNAL_MIN_COMPOSITE_SCORE", okxOfficialRules.minCompositeScore ?? 3);
 const stopLossPct = Number(process.env.STOP_LOSS_PCT || -25);
 const takeProfit1Pct = Number(process.env.TAKE_PROFIT_1_PCT || 50);
 const takeProfit2Pct = Number(process.env.TAKE_PROFIT_2_PCT || 100);
@@ -106,6 +120,57 @@ function loadJson(path, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function deepMerge(base, override) {
+  const merged = { ...base };
+  if (!override || typeof override !== "object" || Array.isArray(override)) return merged;
+  for (const [key, value] of Object.entries(override)) {
+    if (value && typeof value === "object" && !Array.isArray(value) && merged[key] && typeof merged[key] === "object") {
+      merged[key] = deepMerge(merged[key], value);
+    } else {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
+function loadSignalRules(path) {
+  const defaults = {
+    private: {
+      minWallets: 2,
+      strongMinWallets: 3,
+      windowMs: 10 * 60_000,
+      sameGroupRequired: true,
+      crossGroupObserve: true,
+    },
+    okxOfficial: {
+      enabled: true,
+      soloAlert: true,
+      walletTypes: "1,3",
+      limit: 30,
+      minTriggerWallets: 6,
+      maxMarketCapUsd: 500_000,
+      minCompositeScore: 3,
+    },
+  };
+  if (!path || !fs.existsSync(path)) return defaults;
+  const loaded = loadJson(path, null);
+  if (!loaded || typeof loaded !== "object") return defaults;
+  return deepMerge(defaults, loaded);
+}
+
+function envNumber(name, fallback) {
+  const value = process.env[name];
+  if (value === undefined || value === "") return Number(fallback);
+  const n = Number(value);
+  return Number.isFinite(n) ? n : Number(fallback);
+}
+
+function envBool(name, fallback = false) {
+  const value = process.env[name];
+  if (value === undefined || value === "") return Boolean(fallback);
+  return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
 }
 
 function saveAll() {
@@ -493,7 +558,8 @@ function privateSignalEvents() {
 }
 
 function okxSignalEvents() {
-  const j = runJson(["signal", "list", "--chain", "bsc", "--wallet-type", "1,3", "--limit", "30"]);
+  if (!okxOfficialSignalEnabled) return [];
+  const j = runJson(["signal", "list", "--chain", "bsc", "--wallet-type", okxSignalWalletTypes, "--limit", String(okxSignalLimit)]);
   const ws = pollWs(okxWsSignalId);
   const wsRows = Array.isArray(ws?.events) ? ws.events : Array.isArray(ws?.data) ? ws.data : [];
   const directWsRows = okxWsRows("dex-market-new-signal-openapi");
@@ -508,7 +574,7 @@ function okxSignalEvents() {
     const token = row.token || {};
     const count = Number(row.triggerWalletCount || 0);
     const mc = Number(token.marketCapUsd || 0);
-    if (count < 6 || !mc || mc > 500_000) continue;
+    if (count < okxSignalMinWallets || !mc || mc > okxSignalMaxMarketCapUsd) continue;
     const key = `okx:${row.timestamp}:${row.walletType}:${token.tokenAddress}`;
     if (!uniqPush(state, "alertKeys", key)) continue;
     events.push({
@@ -524,6 +590,8 @@ function okxSignalEvents() {
       top10HolderPercent: Number(token.top10HolderPercent || 0),
       marketCapUsd: mc,
       entryPrice: Number(row.price || 0),
+      okxOfficialSignal: true,
+      officialSignalMinWallets: okxSignalMinWallets,
       reason: "OKX 聚合聪明钱/鲸鱼买入",
     });
   }
@@ -1133,15 +1201,15 @@ function groupedProfileStats(event) {
     .some((source) => sources.has(source));
   const triggerCount = profiles.length;
   const signalLevel = qualifiedGroupCount >= 2 ? "多组强信号"
-    : activeGroupCount >= 2 && topCount >= 2 ? "多组共振"
-    : topCount >= 3 || (topCount >= 2 && externalConfirm) ? "强信号"
-    : topCount >= 2 ? "正式信号"
-      : activeGroupCount >= 2 && crossGroupCount >= minPrivateWallets ? "跨组观察"
+    : activeGroupCount >= 2 && topCount >= minPrivateWallets ? "多组共振"
+    : topCount >= strongPrivateWallets || (topCount >= minPrivateWallets && externalConfirm) ? "强信号"
+    : topCount >= minPrivateWallets ? "正式信号"
+      : crossGroupObserveEnabled && activeGroupCount >= 2 && crossGroupCount >= minPrivateWallets ? "跨组观察"
         : triggerCount >= 1 ? "观察信号"
         : "无信号";
   const triggerMode = qualifiedGroupCount >= 2 ? "multi_group"
     : topCount >= minPrivateWallets ? "same_group"
-      : activeGroupCount >= 2 ? "cross_group_observe"
+      : crossGroupObserveEnabled && activeGroupCount >= 2 ? "cross_group_observe"
         : "observe";
 
   return {
@@ -1158,7 +1226,7 @@ function groupedProfileStats(event) {
     externalConfirm,
     signalLevel,
     triggerMode,
-    qualifies: topCount >= 2,
+    qualifies: sameGroupRequired ? topCount >= minPrivateWallets : crossGroupCount >= minPrivateWallets,
   };
 }
 
@@ -1270,6 +1338,9 @@ function telegramSignalMessage(event, trade) {
   const groupLabel = grouped.topProfile ? profileCn(grouped.topProfile) : (event.sentimentGroup?.label || "中性观察");
   const sourceText = event.sources?.join(" + ") || event.source || "unknown";
   const namesText = grouped.names.join("、") || "n/a";
+  const okxOfficialLine = (event.sources || []).includes("okx")
+    ? `• OKX Signal：官方聚合触发钱包 <b>${escapeHtml(event.triggerWalletCount || "n/a")}</b> 个，阈值 ${escapeHtml(okxSignalMinWallets)} 个`
+    : "";
   const lines = [
     `🚨 <b>BSC 分组信号</b>`,
     "",
@@ -1291,6 +1362,8 @@ function telegramSignalMessage(event, trade) {
     `• 外部确认：${escapeHtml(groupStats.externalConfirm ? "有" : "无")}`,
     `• 名单：${escapeHtml(namesText)}`,
   ];
+
+  if (okxOfficialLine) lines.push(okxOfficialLine);
 
   if (event.smartWalletProfiles?.length) {
     const buckets = event.smartWalletProfiles.reduce((acc, row) => {
@@ -1540,6 +1613,8 @@ async function shouldOpenCompositeTrade(event) {
   const hasOkxOrPrivate = sources.has("okx") || sources.has("private");
   const hasLaunchpadConfirm = sources.has("fourmeme") || sources.has("gmgn_trending") || sources.has("gmgn_market");
   const hasGmgnSmart = sources.has("gmgn_smartmoney");
+  const isOkxOfficial = sources.has("okx") && Number(event.triggerWalletCount || 0) >= okxSignalMinWallets;
+  const isOkxOfficialSolo = okxOfficialSoloAlert && isOkxOfficial;
   const isConfirmed = hasOkxOrPrivate || (hasGmgnSmart && hasLaunchpadConfirm);
   const isStrongGmgnSolo = allowStrongGmgnSolo
     && sources.size === 1
@@ -1574,8 +1649,8 @@ async function shouldOpenCompositeTrade(event) {
   event.effectiveCompositeScore = effectiveScore + sentimentBonus(event);
   const groupedStats = groupedProfileStats(event);
   event.groupedProfileStats = groupedStats;
-  const scoreOk = effectiveScore >= minCompositeScore;
-  const groupedOk = groupedStats.qualifies || (allowOfficialSoloSignal && (event.source === "okx" || (event.sources || []).includes("okx")));
+  const scoreOk = effectiveScore >= minCompositeScore || (isOkxOfficialSolo && effectiveScore >= okxSignalMinCompositeScore);
+  const groupedOk = groupedStats.qualifies || (allowOfficialSoloSignal && isOkxOfficial);
   const strongFourMemeSolo = allowStrongFourMemeSolo
     && sources.size === 1
     && sources.has("fourmeme")
@@ -1612,9 +1687,9 @@ async function shouldOpenCompositeTrade(event) {
     ok: false,
     reason: [
       !isConfirmed && !isStrongGmgnSolo && !strongFourMemeSolo ? "missing OKX/private/FourMeme confirmation" : "",
-      !groupedOk && !isStrongGmgnSolo && !strongFourMemeSolo ? "no same-group concentration (need >=2 safe wallets in one positive group)" : "",
+      !groupedOk && !isStrongGmgnSolo && !strongFourMemeSolo ? `no configured concentration (need ${sameGroupRequired ? `>=${minPrivateWallets} safe wallets in one positive group` : `>=${minPrivateWallets} safe wallets`}${okxOfficialSoloAlert ? `, or OKX official >=${okxSignalMinWallets}` : ""})` : "",
       sources.size === 1 && sources.has("fourmeme") && allowStrongFourMemeSolo && !strongFourMemeSolo ? "fourmeme solo not strong enough" : "",
-      !scoreOk && !isStrongGmgnSolo && !strongFourMemeSolo ? `score ${effectiveScore} < ${minCompositeScore}` : "",
+      !scoreOk && !isStrongGmgnSolo && !strongFourMemeSolo ? `score ${effectiveScore} < ${isOkxOfficialSolo ? okxSignalMinCompositeScore : minCompositeScore}` : "",
       !mcOk ? `market cap ${fmtUsd(mc)} > ${fmtUsd(maxEntryMarketCapUsd)}` : "",
       !liqOk ? `liquidity ${liq ? fmtUsd(liq) : "missing"} < ${fmtUsd(minEntryLiquidityUsd)}` : "",
       !holdersOk ? `holders ${holders || "missing"} < ${minEntryHolders}` : "",
@@ -1924,7 +1999,7 @@ function eventMessage(event, trade) {
 }
 
 async function main() {
-  console.log(`[monitor] BSC signal + paper monitor started. safeAddresses=${safeTrackedWallets.length}, poll=${pollMs}ms, paper=${fmtUsd(paperSizeUsd)}`);
+  console.log(`[monitor] BSC signal + paper monitor started. safeAddresses=${safeTrackedWallets.length}, poll=${pollMs}ms, privateMin=${minPrivateWallets}, privateWindow=${privateWindowMs}ms, okxOfficial=${okxOfficialSignalEnabled ? `on(min=${okxSignalMinWallets}, solo=${okxOfficialSoloAlert ? "on" : "off"})` : "off"}, paper=${fmtUsd(paperSizeUsd)}`);
   while (true) {
     currentOkxWsFrames = consumeOkxWsFrames();
     const tradeMessages = updatePaperTrades();

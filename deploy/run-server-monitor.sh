@@ -22,4 +22,5 @@ export PATH="/root/.local/bin:/root/.bun/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 echo "[money-money-come] starting monitor"
 echo "[money-money-come] profiles: ${SMART_WALLET_PROFILES_PATH:-data/smart_wallet_profiles_bsc.json}"
 echo "[money-money-come] groups: ${SMART_WALLET_GROUPS_PATH:-data/smart_wallet_groups_bsc.json}"
+echo "[money-money-come] rules: ${SIGNAL_RULES_PATH:-config/signal-rules.json}"
 exec node scripts/monitor_bsc_signals.mjs
