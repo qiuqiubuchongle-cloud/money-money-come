@@ -114,6 +114,7 @@ let state = loadJson(statePath, {
   seenOkxSignalKeys: [],
   seenMemeKeys: [],
   seenGmgnKeys: [],
+  okxOfficialForwardSeeded: false,
   okxWsOffset: 0,
   memepumpRiskCache: {},
   alertKeys: [],
@@ -651,12 +652,13 @@ function okxSignalEvents() {
   const rows = [...(Array.isArray(j.data) ? j.data : []), ...wsRows, ...directWsRows];
 
   const events = [];
+  const seedOkxForwardState = !state.seeded || !state.okxOfficialForwardSeeded;
   for (const event of normalizeOkxSignalRows(rows)) {
     const raw = event.raw || {};
     const stableId = raw.cursor || raw.id || raw.signalId || raw.eventId || raw.timestamp || raw.signalTime || raw.time
       || `${event.token}:${event.walletType ?? ""}:${event.triggerWalletCount || ""}:${event.amountUsd || ""}:${event.entryPrice || ""}:${event.marketCapUsd || ""}`;
     const seenKey = `${stableId}:${raw.walletType ?? event.walletType}:${raw.token?.tokenAddress || event.token}`;
-    if (!state.seeded) {
+    if (seedOkxForwardState) {
       uniqPush(state, "seenOkxSignalKeys", seenKey);
       continue;
     }
@@ -674,6 +676,9 @@ function okxSignalEvents() {
     const key = `okx:${seenKey}`;
     if (!uniqPush(state, "alertKeys", key)) continue;
     events.push(event);
+  }
+  if (seedOkxForwardState && (rows.length > 0 || j.ok !== false)) {
+    state.okxOfficialForwardSeeded = true;
   }
   return events;
 }
