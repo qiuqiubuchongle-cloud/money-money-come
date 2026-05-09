@@ -10,6 +10,7 @@
     "wallet-report-tg": "node scripts/send_wallet_report_to_tg.mjs",
     "wallet-groups": "node scripts/report_smart_wallet_groups.mjs",
     "export-curated": "node scripts/export_curated_wallets.mjs",
+    "build-signal-pool": "node scripts/build_recommended_signal_pool.mjs",
     "sol:import-wallets": "SMART_WALLET_CHAIN=solana node scripts/import_smart_wallets.mjs",
     "sol:profiles": "SMART_WALLET_CHAIN=solana node scripts/build_smart_wallet_profiles.mjs",
     "sol:wallet-report": "SMART_WALLET_CHAIN=solana node scripts/report_smart_wallet.mjs",

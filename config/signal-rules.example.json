@@ -4,7 +4,14 @@
     "strongMinWallets": 3,
     "windowMs": 120000,
     "sameGroupRequired": true,
-    "crossGroupObserve": true
+    "crossGroupObserve": true,
+    "observe": {
+      "enabled": true,
+      "minWallets": 2,
+      "windowMs": 300000,
+      "sameGroupRequired": true,
+      "requireExternalConfirm": false
+    }
   },
   "okxOfficial": {
     "enabled": true,

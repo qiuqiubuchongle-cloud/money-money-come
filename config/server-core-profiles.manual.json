@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-05-09T05:16:30.246Z",
+  "profiles": [
+    {
+      "walletAddress": "0xa83b73f5644cde337b61da79589f10ea15548811",
+      "walletName": "",
+      "walletEmoji": "",
+      "profile": "ten_k_profit_champion",
+      "profileLabel": "稳定盈利手",
+      "labels": [
+        "ten_k_profit_champion"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 97,
+      "walletTier": "核心",
+      "walletStyleLabel": "早期盈利雷达",
+      "signalGroup": "盈利组",
+      "emotionWeight": 1.3,
+      "totalRealizedPnlUsd": 70709.10815220595,
+      "winRatePct": 46.62,
+      "lowMcBuyPct": 95.07793273174734,
+      "analysisSummary": "早期盈利雷达，70,709U已实现，胜率46.6%，刚动过",
+      "latestTradeIso": "2026-05-08T05:00:24.000Z",
+      "safeCandidate": true
+    },
+    {
+      "walletAddress": "0x8d5624fa29526c879a1ca7560961e4c5a08089ae",
+      "walletName": "oxaa / 链上小旋风",
+      "walletEmoji": "",
+      "profile": "hot_meme_sniper",
+      "profileLabel": "热点雷达手",
+      "labels": [
+        "hot_meme_sniper"
+      ],
+      "reliabilityScore": 100,
+      "walletValueScore": 78,
+      "walletTier": "核心",
+      "walletStyleLabel": "叙事捕手",
+      "signalGroup": "热点组",
+      "emotionWeight": 1.2,
+      "totalRealizedPnlUsd": 4984.429355457914,
+      "winRatePct": 50,
+      "lowMcBuyPct": 76.19047619047619,
+      "analysisSummary": "链上小旋风，擅长捕捉叙事，适合同组共振确认",
+      "latestTradeIso": "2026-05-07T17:40:05.000Z",
+      "safeCandidate": true
+    }
+  ]
+}

@@ -44,7 +44,14 @@ cp config/signal-rules.example.json config/signal-rules.json
     "strongMinWallets": 3,
     "windowMs": 120000,
     "sameGroupRequired": true,
-    "crossGroupObserve": true
+    "crossGroupObserve": true,
+    "observe": {
+      "enabled": true,
+      "minWallets": 2,
+      "windowMs": 300000,
+      "sameGroupRequired": true,
+      "requireExternalConfirm": false
+    }
   },
   "okxOfficial": {
     "enabled": true,
@@ -84,6 +91,9 @@ cp config/signal-rules.example.json config/signal-rules.json
 MIN_PRIVATE_WALLETS=3
 PRIVATE_WINDOW_MS=120000
 STRONG_PRIVATE_WALLETS=3
+OBSERVE_SIGNAL_ENABLED=1
+OBSERVE_MIN_WALLETS=2
+OBSERVE_WINDOW_MS=300000
 OKX_OFFICIAL_SIGNAL_ENABLED=1
 OKX_OFFICIAL_FORWARD_ENABLED=1
 OKX_OFFICIAL_APPLY_LOCAL_FILTERS=0
@@ -241,7 +251,7 @@ OKX 官方 Signal 是单独的转发卡：
 - 代币市值、流动性、持有人或风险过滤未通过
 - 首次启动处于 seeded 状态，只记录当前状态，不推历史信号
 
-想提高私有池信号密度，优先扩大高质量地址池；其次再调整 `private.minWallets` 或 `windowMs`。想减少 OKX 转发噪音，再开启 `OKX_OFFICIAL_APPLY_LOCAL_FILTERS=1`。
+想提高私有池信号密度，优先扩大高质量地址池；其次再开启 `private.observe`，让 2 个同组观察钱包先发“观察信号”。想减少 OKX 转发噪音，再开启 `OKX_OFFICIAL_APPLY_LOCAL_FILTERS=1`。
 
 ## 安全边界
 

@@ -195,6 +195,9 @@ Key fields:
 - `private.minWallets`: how many private safe wallets must buy the same token
 - `private.windowMs`: concentration window
 - `private.sameGroupRequired`: require same positive group before formal alert
+- `private.observe.enabled`: enable softer observation alerts
+- `private.observe.minWallets`: how many safe/observe wallets trigger observation
+- `private.observe.windowMs`: observation window; observation alerts do not open paper trades by default
 - `okxOfficial.enabled`: read the OKX official Signal feed
 - `okxOfficial.forward`: forward OKX official Signal rows to Telegram as their own channel
 - `okxOfficial.applyLocalFilters`: optionally apply local noise filters before forwarding OKX official Signal rows
@@ -206,12 +209,15 @@ Environment variables override JSON:
 ```bash
 MIN_PRIVATE_WALLETS=3
 PRIVATE_WINDOW_MS=120000
+OBSERVE_SIGNAL_ENABLED=1
+OBSERVE_MIN_WALLETS=2
+OBSERVE_WINDOW_MS=300000
 OKX_OFFICIAL_SIGNAL_ENABLED=1
 OKX_OFFICIAL_FORWARD_ENABLED=1
 OKX_OFFICIAL_APPLY_LOCAL_FILTERS=0
 ```
 
-Important: private grouped alerts and OKX official Signal are separate channels. Private alerts use the user's safe wallet pool and same-group concentration rules. OKX official Signal should be forwarded as-is with an added remark, unless the user explicitly enables local filtering. Do not treat OKX official Signal as proof that the user's private smart-wallet group has converged.
+Important: private grouped alerts and OKX official Signal are separate channels. Private alerts use the user's safe wallet pool and same-group concentration rules. Observation alerts can include the observe pool and should be labeled clearly as observation, not a formal entry. OKX official Signal should be forwarded as-is with an added remark, unless the user explicitly enables local filtering. Do not treat OKX official Signal as proof that the user's private smart-wallet group has converged.
 
 GMGN / Binance data sources are optional enhancers. The baseline workflow should still be useful with:
 

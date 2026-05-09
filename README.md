@@ -157,8 +157,9 @@ npm run export-curated
 
 - 同一正向分组内 `3` 个核心钱包，在 `2` 分钟内买入同一 token，触发正式信号
 - 同一正向分组内 `3` 个核心钱包，标记为强信号
+- 同一正向分组内 `2` 个核心/观察钱包，在 `5` 分钟内买入同一 token，触发观察信号
 - 多个分组同时达标，标记为多组强信号
-- 不同组各 1 个地址买入，只作为观察，不默认推送正式信号
+- 观察信号只提醒，不进入模拟盘；不同组各 1 个地址买入，只作为跨组观察
 
 你可以把这个规则改成自己的版本，例如：
 
@@ -184,7 +185,14 @@ cp config/signal-rules.example.json config/signal-rules.json
     "strongMinWallets": 3,
     "windowMs": 120000,
     "sameGroupRequired": true,
-    "crossGroupObserve": true
+    "crossGroupObserve": true,
+    "observe": {
+      "enabled": true,
+      "minWallets": 2,
+      "windowMs": 300000,
+      "sameGroupRequired": true,
+      "requireExternalConfirm": false
+    }
   }
 }
 ```
@@ -196,6 +204,21 @@ cp config/signal-rules.example.json config/signal-rules.json
 - `windowMs=120000`：统计窗口是 2 分钟
 - `sameGroupRequired=true`：必须是同一正向分组内的钱包集中买入
 - `crossGroupObserve=true`：不同组同时出现买入时，记录为跨组观察
+- `observe.minWallets=2`：观察池同组 2 个钱包即可提示
+- `observe.windowMs=300000`：观察窗口是 5 分钟
+- `observe.requireExternalConfirm=false`：观察信号不强制要求 OKX / Four.meme 等外部源确认
+
+你也可以先生成一版分层观察池：
+
+```bash
+npm run build-signal-pool
+```
+
+它会从已分析画像里生成：
+
+- `safeSignalPool`：强提醒池，默认只收核心正向钱包
+- `observeSignalPool`：观察池，参与早发现，但不进入模拟盘
+- `excludedSignalPool`：有正向标签但不适合直接提醒的钱包
 
 如果你想更保守：
 

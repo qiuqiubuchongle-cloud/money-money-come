@@ -11,6 +11,7 @@ const signalRulesPath = process.env.SIGNAL_RULES_PATH || "config/signal-rules.js
 const signalRules = loadSignalRules(signalRulesPath);
 const privateRules = signalRules.private || {};
 const okxOfficialRules = signalRules.okxOfficial || {};
+const observeRules = privateRules.observe || {};
 
 const pollMs = envNumber("POLL_MS", 60_000);
 const paperSizeUsd = Number(process.env.PAPER_SIZE_USD || 10);
@@ -19,6 +20,11 @@ const minPrivateWallets = envNumber("MIN_PRIVATE_WALLETS", privateRules.minWalle
 const strongPrivateWallets = envNumber("STRONG_PRIVATE_WALLETS", privateRules.strongMinWallets ?? Math.max(3, minPrivateWallets + 1));
 const sameGroupRequired = envBool("PRIVATE_SAME_GROUP_REQUIRED", privateRules.sameGroupRequired !== false);
 const crossGroupObserveEnabled = envBool("CROSS_GROUP_OBSERVE_ENABLED", privateRules.crossGroupObserve !== false);
+const observeSignalEnabled = envBool("OBSERVE_SIGNAL_ENABLED", observeRules.enabled !== false);
+const observeWindowMs = envNumber("OBSERVE_WINDOW_MS", observeRules.windowMs ?? 5 * 60_000);
+const observeMinWallets = envNumber("OBSERVE_MIN_WALLETS", observeRules.minWallets ?? 2);
+const observeSameGroupRequired = envBool("OBSERVE_SAME_GROUP_REQUIRED", observeRules.sameGroupRequired !== false);
+const observeRequireExternalConfirm = envBool("OBSERVE_REQUIRE_EXTERNAL_CONFIRM", observeRules.requireExternalConfirm === true);
 const okxOfficialSignalEnabled = envBool("OKX_OFFICIAL_SIGNAL_ENABLED", okxOfficialRules.enabled !== false);
 const okxOfficialForwardDefault = okxOfficialRules.forward ?? okxOfficialRules.soloAlert ?? true;
 const okxOfficialForwardEnabled = process.env.OKX_OFFICIAL_FORWARD_ENABLED !== undefined
@@ -158,6 +164,13 @@ function loadSignalRules(path) {
       windowMs: 2 * 60_000,
       sameGroupRequired: true,
       crossGroupObserve: true,
+      observe: {
+        enabled: true,
+        minWallets: 2,
+        windowMs: 5 * 60_000,
+        sameGroupRequired: true,
+        requireExternalConfirm: false,
+      },
     },
     okxOfficial: {
       enabled: true,
@@ -228,7 +241,10 @@ function loadSmartWalletProfiles() {
 
 function loadSafeTrackedWallets() {
   const groupJson = loadJson(smartWalletGroupsPath, {});
-  const pool = Array.isArray(groupJson.safeSignalPool) ? groupJson.safeSignalPool : [];
+  const pool = [
+    ...(Array.isArray(groupJson.safeSignalPool) ? groupJson.safeSignalPool : []),
+    ...(observeSignalEnabled && Array.isArray(groupJson.observeSignalPool) ? groupJson.observeSignalPool : []),
+  ];
   if (pool.length) return pool.map((row) => String(row.walletAddress || "").toLowerCase()).filter(Boolean);
   return fs.readFileSync(activeAddressesPath, "utf8").split(/\s+/).filter(Boolean);
 }
@@ -468,6 +484,7 @@ function narrativeSummary(event) {
   const name = event.name && event.name !== event.symbol ? `${event.name} / ${event.symbol}` : (event.symbol || event.name || "UNKNOWN");
   const parts = [];
   if ((event.sources || []).includes("private")) parts.push("你的私有聪明钱地址池出现集中买入");
+  if ((event.sources || []).includes("private_observe")) parts.push("观察池出现同组试探买入");
   if ((event.sources || []).includes("okx")) parts.push("OKX 聚合聪明钱/鲸鱼信号确认");
   if ((event.sources || []).includes("gmgn_smartmoney")) parts.push("GMGN Smart Money 正在买入");
   if ((event.sources || []).includes("fourmeme")) parts.push("Four.meme 新盘/曲线阶段出现异动");
@@ -585,7 +602,8 @@ function privateSignalEvents() {
   }
   if (!state.seeded) return [];
 
-  const recent = trades.filter((t) => now - Number(t.tradeTime || 0) <= privateWindowMs);
+  const recentWindowMs = observeSignalEnabled ? Math.max(privateWindowMs, observeWindowMs) : privateWindowMs;
+  const recent = trades.filter((t) => now - Number(t.tradeTime || 0) <= recentWindowMs);
   const byToken = new Map();
   for (const t of recent) {
     const chainIndex = String(t.chainIndex || t.chainId || "");
@@ -611,16 +629,38 @@ function privateSignalEvents() {
     item.signalTime = Math.max(item.signalTime, Number(t.tradeTime || 0));
     if (Number(t.marketCap || 0)) item.marketCapUsd = Number(t.marketCap);
     if (Number(t.tokenPrice || 0)) item.entryPrice = Number(t.tokenPrice);
+    item.triggerWalletTimes = item.triggerWalletTimes || {};
+    const wallet = String(t.walletAddress || "").toLowerCase();
+    if (wallet) item.triggerWalletTimes[wallet] = Math.max(Number(item.triggerWalletTimes[wallet] || 0), Number(t.tradeTime || 0));
     item.details.push(t);
     byToken.set(token, item);
   }
 
   const events = [];
   for (const item of byToken.values()) {
-    if (item.triggerWallets.size < minPrivateWallets) continue;
-    const alertKey = `private:${item.token}:${[...item.triggerWallets].sort().join(",")}:${Math.floor(item.signalTime / privateWindowMs)}`;
+    const formalWallets = [...item.triggerWallets].filter((wallet) => (
+      now - Number(item.triggerWalletTimes?.[wallet] || item.signalTime || 0) <= privateWindowMs
+    ));
+    const observeWallets = [...item.triggerWallets].filter((wallet) => (
+      now - Number(item.triggerWalletTimes?.[wallet] || item.signalTime || 0) <= observeWindowMs
+    ));
+    const isFormal = formalWallets.length >= minPrivateWallets;
+    const isObserve = observeSignalEnabled && observeWallets.length >= observeMinWallets;
+    if (!isFormal && !isObserve) continue;
+    const signalTier = isFormal ? "formal" : "observe";
+    const walletSet = isFormal ? formalWallets : observeWallets;
+    const windowMs = isFormal ? privateWindowMs : observeWindowMs;
+    const alertKey = `${signalTier === "formal" ? "private" : "observe"}:${item.token}:${walletSet.sort().join(",")}:${Math.floor(item.signalTime / windowMs)}`;
     if (!uniqPush(state, "alertKeys", alertKey)) continue;
-    events.push({ ...item, triggerWalletCount: item.triggerWallets.size, triggerWallets: [...item.triggerWallets] });
+    events.push({
+      ...item,
+      source: signalTier === "formal" ? "private" : "private_observe",
+      reason: signalTier === "formal" ? item.reason : "私有地址池观察共振",
+      signalTier,
+      triggerWalletCount: walletSet.length,
+      triggerWallets: walletSet,
+      details: item.details.filter((row) => walletSet.includes(String(row.walletAddress || "").toLowerCase())),
+    });
   }
   return events;
 }
@@ -1161,6 +1201,7 @@ async function binanceTokenDynamicInfo(token) {
 function eventSourceWeight(event) {
   switch (event.source) {
     case "private": return 4;
+    case "private_observe": return 3;
     case "okx": return 3;
     case "fourmeme": return 2;
     case "gmgn_smartmoney": return 2;
@@ -1271,19 +1312,20 @@ function groupedProfileStats(event) {
   const profiles = event.smartWalletProfiles || [];
   const positive = new Set(["hundred_x_hunter", "ten_k_profit_champion", "hot_meme_sniper", "conviction_reloader"]);
   const counts = {};
+  const coreCounts = {};
   const walletsByProfile = {};
   for (const row of profiles) {
     const profile = String(row.profile || "");
     if (!positive.has(profile)) continue;
-    if (row.walletTier && row.walletTier !== "核心") continue;
     counts[profile] = (counts[profile] || 0) + 1;
+    if (!row.walletTier || row.walletTier === "核心") coreCounts[profile] = (coreCounts[profile] || 0) + 1;
     walletsByProfile[profile] = walletsByProfile[profile] || [];
     walletsByProfile[profile].push(String(row.walletAddress || "").toLowerCase());
   }
 
   let topProfile = "";
   let topCount = 0;
-  for (const [profile, count] of Object.entries(counts)) {
+  for (const [profile, count] of Object.entries(coreCounts)) {
     if (count > topCount) {
       topProfile = profile;
       topCount = count;
@@ -1295,44 +1337,63 @@ function groupedProfileStats(event) {
       profile,
       label: profileCn(profile),
       count,
+      coreCount: coreCounts[profile] || 0,
       wallets: walletsByProfile[profile] || [],
     }))
     .sort((a, b) => b.count - a.count);
-  const qualifiedGroups = activeGroups.filter((row) => row.count >= minPrivateWallets);
+  const qualifiedGroups = activeGroups.filter((row) => row.coreCount >= minPrivateWallets);
+  const observeQualifiedGroups = activeGroups.filter((row) => row.count >= observeMinWallets);
   const activeGroupCount = activeGroups.length;
   const qualifiedGroupCount = qualifiedGroups.length;
+  const observeQualifiedGroupCount = observeQualifiedGroups.length;
   const crossGroupCount = activeGroups.reduce((sum, row) => sum + row.count, 0);
+  const crossGroupCoreCount = Object.values(coreCounts).reduce((sum, count) => sum + count, 0);
   const sources = new Set(event.sources || [event.source]);
   const externalConfirm = ["okx", "gmgn_smartmoney", "gmgn_market", "gmgn_trending", "fourmeme", "binance_meme", "binance_topic"]
     .some((source) => sources.has(source));
   const triggerCount = profiles.length;
+  const observeTop = activeGroups[0] || {};
+  const observeTopProfile = observeTop.profile || "";
+  const observeTopCount = Number(observeTop.count || 0);
+  const observeQualifies = observeSignalEnabled
+    && (!observeRequireExternalConfirm || externalConfirm)
+    && (observeSameGroupRequired ? observeTopCount >= observeMinWallets : crossGroupCount >= observeMinWallets);
   const signalLevel = qualifiedGroupCount >= 2 ? "多组强信号"
     : activeGroupCount >= 2 && topCount >= minPrivateWallets ? "多组共振"
     : topCount >= strongPrivateWallets || (topCount >= minPrivateWallets && externalConfirm) ? "强信号"
     : topCount >= minPrivateWallets ? "正式信号"
-      : crossGroupObserveEnabled && activeGroupCount >= 2 && crossGroupCount >= minPrivateWallets ? "跨组观察"
+      : observeQualifies ? "观察信号"
+        : crossGroupObserveEnabled && activeGroupCount >= 2 && crossGroupCoreCount >= minPrivateWallets ? "跨组观察"
         : triggerCount >= 1 ? "观察信号"
         : "无信号";
   const triggerMode = qualifiedGroupCount >= 2 ? "multi_group"
     : topCount >= minPrivateWallets ? "same_group"
-      : crossGroupObserveEnabled && activeGroupCount >= 2 ? "cross_group_observe"
+      : observeQualifies ? "observe_group"
+        : crossGroupObserveEnabled && activeGroupCount >= 2 ? "cross_group_observe"
         : "observe";
 
   return {
     counts,
+    coreCounts,
     walletsByProfile,
     activeGroups,
     qualifiedGroups,
+    observeQualifiedGroups,
     activeGroupCount,
     qualifiedGroupCount,
+    observeQualifiedGroupCount,
     crossGroupCount,
+    crossGroupCoreCount,
     topProfile,
     topCount,
+    observeTopProfile,
+    observeTopCount,
     triggerCount,
     externalConfirm,
     signalLevel,
     triggerMode,
-    qualifies: sameGroupRequired ? topCount >= minPrivateWallets : crossGroupCount >= minPrivateWallets,
+    qualifies: sameGroupRequired ? topCount >= minPrivateWallets : crossGroupCoreCount >= minPrivateWallets,
+    observeQualifies,
   };
 }
 
@@ -1403,9 +1464,10 @@ function sentimentNarrative(event) {
 function groupedStatsNarrative(stats) {
   if (!stats) return "暂无分组统计";
   const groups = stats.activeGroups || [];
-  const text = groups.map((row) => `${row.label} ${row.count}`).join(" / ") || "暂无正向核心组";
+  const text = groups.map((row) => `${row.label} ${row.count}${row.coreCount !== row.count ? `｜核心${row.coreCount}` : ""}`).join(" / ") || "暂无正向核心组";
   if (stats.triggerMode === "multi_group") return `多组强共振｜${text}`;
   if (stats.triggerMode === "same_group") return `${profileCn(stats.topProfile)} 同组共振 ${stats.topCount} 个｜${text}`;
+  if (stats.triggerMode === "observe_group") return `${profileCn(stats.observeTopProfile)} 观察共振 ${stats.observeTopCount} 个｜${text}`;
   if (stats.triggerMode === "cross_group_observe") return `跨组观察，未达同组阈值｜${text}`;
   return `观察中｜${text}`;
 }
@@ -1448,7 +1510,7 @@ function telegramSignalMessage(event, trade) {
     ? `• OKX Signal：官方聚合触发钱包 <b>${escapeHtml(event.triggerWalletCount || "n/a")}</b> 个，阈值 ${escapeHtml(okxSignalMinWallets)} 个`
     : "";
   const lines = [
-    `🚨 <b>BSC 分组信号</b>`,
+    `${event.alertOnly ? "👀" : "🚨"} <b>BSC ${event.alertOnly ? "观察信号" : "分组信号"}</b>`,
     "",
     `🪙 <b>${escapeHtml(event.symbol || "UNKNOWN")}</b> ｜ ${escapeHtml(event.name || event.symbol || "UNKNOWN")}`,
     `📌 <b>等级</b>：${escapeHtml(groupStats.signalLevel || "正式信号")} ｜ ${escapeHtml(groupLabel)} ｜ 情绪分 ${escapeHtml(event.sentimentGroup?.score ?? "n/a")}`,
@@ -1464,7 +1526,8 @@ function telegramSignalMessage(event, trade) {
     `• 触发地址：<b>${escapeHtml(grouped.triggerCount)}</b> 个`,
     `• 触发模式：<b>${escapeHtml(groupedStatsNarrative(groupStats))}</b>`,
     `• 核心同组：<b>${escapeHtml(grouped.topCount || 0)}</b> 个`,
-    `• 多组参与：${escapeHtml(groupStats.activeGroupCount || 0)} 组，达标组 ${escapeHtml(groupStats.qualifiedGroupCount || 0)} 组`,
+    `• 观察同组：<b>${escapeHtml(groupStats.observeTopCount || 0)}</b> 个`,
+    `• 多组参与：${escapeHtml(groupStats.activeGroupCount || 0)} 组，正式达标 ${escapeHtml(groupStats.qualifiedGroupCount || 0)} 组，观察达标 ${escapeHtml(groupStats.observeQualifiedGroupCount || 0)} 组`,
     `• 外部确认：${escapeHtml(groupStats.externalConfirm ? "有" : "无")}`,
     `• 名单：${escapeHtml(namesText)}`,
   ];
@@ -1488,6 +1551,9 @@ function telegramSignalMessage(event, trade) {
   if (trade) {
     lines.push("");
     lines.push(`🧪 <b>模拟盘</b>：已按 ${escapeHtml(fmtUsd(paperSizeUsd))} 建仓，成本后入场价 <code>${escapeHtml(trade.entryPrice)}</code>`);
+  } else if (event.alertOnly) {
+    lines.push("");
+    lines.push(`🔎 <b>动作</b>：观察提醒，未进入模拟盘；等待更多核心钱包或外部确认。`);
   } else {
     lines.push("");
     lines.push(`🔔 <b>动作</b>：仅提醒，未建仓`);
@@ -1740,7 +1806,7 @@ async function enrichEventWithBinanceTokenInfo(event, info) {
 
 async function shouldOpenCompositeTrade(event) {
   const sources = new Set(event.sources || [event.source]);
-  const hasOkxOrPrivate = sources.has("okx") || sources.has("private");
+  const hasOkxOrPrivate = sources.has("okx") || sources.has("private") || sources.has("private_observe");
   const hasLaunchpadConfirm = sources.has("fourmeme") || sources.has("gmgn_trending") || sources.has("gmgn_market");
   const hasGmgnSmart = sources.has("gmgn_smartmoney");
   const isOkxOfficial = sources.has("okx") && Number(event.triggerWalletCount || 0) >= okxSignalMinWallets;
@@ -1779,6 +1845,13 @@ async function shouldOpenCompositeTrade(event) {
   event.effectiveCompositeScore = effectiveScore + sentimentBonus(event);
   const groupedStats = groupedProfileStats(event);
   event.groupedProfileStats = groupedStats;
+  if (!groupedStats.qualifies && groupedStats.observeQualifies) {
+    event.alertOnly = true;
+    event.observationReason = observeRequireExternalConfirm
+      ? `观察池同组 ${observeMinWallets}+ 且有外部确认`
+      : `观察池同组 ${observeMinWallets}+`;
+    return { ok: true, info, alertOnly: true };
+  }
   const scoreOk = effectiveScore >= minCompositeScore || (isOkxOfficialSolo && effectiveScore >= okxSignalMinCompositeScore);
   const groupedOk = groupedStats.qualifies || (allowOfficialSoloSignal && isOkxOfficial);
   const strongFourMemeSolo = allowStrongFourMemeSolo
@@ -2096,6 +2169,8 @@ function eventMessage(event, trade) {
   ];
   if (event.source === "private") {
     bits.push(`私有钱包数: ${event.triggerWalletCount}，交易数: ${event.tradeCount}，市值约 ${fmtUsd(event.marketCapUsd)}`);
+  } else if (event.source === "private_observe") {
+    bits.push(`观察钱包数: ${event.triggerWalletCount}，交易数: ${event.tradeCount}，市值约 ${fmtUsd(event.marketCapUsd)}`);
   } else if (event.source === "okx") {
     bits.push(`触发钱包数: ${event.triggerWalletCount}，买入额约 ${fmtUsd(event.amountUsd)}，市值约 ${fmtUsd(event.marketCapUsd)}，已卖比例 ${fmtPct(-event.soldRatioPercent).replace("-", "")}`);
   } else if (String(event.source || "").startsWith("gmgn")) {
@@ -2123,13 +2198,14 @@ function eventMessage(event, trade) {
     bits.push(`深度风控: ${event.memepumpRiskSummary || "n/a"}；加分项: ${(event.memepumpRiskBonuses || []).join(", ") || "n/a"}；风险项: ${(event.memepumpRiskPenalties || []).join(", ") || "n/a"}`);
   }
   if (event.observeSummary) bits.push(`入场确认: ${event.observeSummary}`);
+  if (event.observationReason) bits.push(`观察原因: ${event.observationReason}`);
   bits.push(`成本模型: 不加延迟，买滑 ${buySlippagePct}%，卖滑 ${sellSlippagePct}%，每笔 gas ${fmtUsd(gasUsdPerTx)}。`);
   bits.push(`模拟规则: -25% 止损，+50% 卖 50%，+100% 再卖 30%，尾仓移动止盈。`);
   return bits.join("\n");
 }
 
 async function main() {
-  console.log(`[monitor] BSC signal + paper monitor started. safeAddresses=${safeTrackedWallets.length}, poll=${pollMs}ms, privateMin=${minPrivateWallets}, privateWindow=${privateWindowMs}ms, okxOfficial=${okxOfficialSignalEnabled ? `on(forward=${okxOfficialForwardEnabled ? "on" : "off"}, localFilters=${okxOfficialApplyLocalFilters ? "on" : "off"})` : "off"}, paper=${fmtUsd(paperSizeUsd)}`);
+  console.log(`[monitor] BSC signal + paper monitor started. safeAddresses=${safeTrackedWallets.length}, poll=${pollMs}ms, privateMin=${minPrivateWallets}, privateWindow=${privateWindowMs}ms, observe=${observeSignalEnabled ? `on(min=${observeMinWallets}, window=${observeWindowMs}ms)` : "off"}, okxOfficial=${okxOfficialSignalEnabled ? `on(forward=${okxOfficialForwardEnabled ? "on" : "off"}, localFilters=${okxOfficialApplyLocalFilters ? "on" : "off"})` : "off"}, paper=${fmtUsd(paperSizeUsd)}`);
   while (true) {
     currentOkxWsFrames = consumeOkxWsFrames();
     const tradeMessages = updatePaperTrades();
@@ -2161,6 +2237,10 @@ async function main() {
           }
           continue;
         }
+        if (event.alertOnly || decision.alertOnly) {
+          signalMessages.push(eventMessage(event, null));
+          continue;
+        }
         const observed = observeEntry(event, decision.info, decision);
         if (!observed.ready) {
           skipReasons.set(observed.reason, (skipReasons.get(observed.reason) || 0) + 1);
@@ -2185,6 +2265,10 @@ async function main() {
       if (okxTelegramMessages.length) telegramMessages.push(...okxTelegramMessages);
       if (signalMessages.length) {
         for (const event of events) {
+          if (event.alertOnly) {
+            telegramMessages.push(telegramSignalMessage(event, null));
+            continue;
+          }
           const trade = paper.open.find((row) => row.token === event.token && Math.abs(Number(row.signalTime || 0) - Number(event.signalTime || 0)) < privateWindowMs);
           if (trade) telegramMessages.push(telegramSignalMessage(event, trade));
         }
