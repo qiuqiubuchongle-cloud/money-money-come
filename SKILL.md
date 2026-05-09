@@ -42,6 +42,7 @@ This skill is for building and operating a BSC or Solana smart-money analysis wo
 
 ## Primary Files
 
+- Wallet importer: `scripts/import_smart_wallets.mjs`
 - Wallet profile builder: `scripts/build_smart_wallet_profiles.mjs`
 - Single wallet report: `scripts/report_smart_wallet.mjs`
 - Group report and safe signal pool: `scripts/report_smart_wallet_groups.mjs`

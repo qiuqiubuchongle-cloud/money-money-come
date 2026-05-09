@@ -56,7 +56,7 @@
 BSC：
 
 ```bash
-npm run import-wallets -- examples/gmgn_wallets_input.example.json
+npm run import-wallets -- examples/smart_wallets_input.example.json
 ```
 
 Solana：
@@ -319,7 +319,7 @@ npx skills add https://github.com/qiuqiubuchongle-cloud/money-money-come
 BSC：
 
 ```bash
-npm run import-wallets -- examples/gmgn_wallets_input.example.json
+npm run import-wallets -- examples/smart_wallets_input.example.json
 OKX_PROFILE_TIME_FRAME_DAYS=3 npm run profiles
 npm run wallet-groups
 npm run export-curated

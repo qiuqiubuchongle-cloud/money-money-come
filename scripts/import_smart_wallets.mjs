@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { chainConfig, normalizeWalletAddress } from "./chain_config.mjs";
 
-const inputPath = process.argv[2] || "data/gmgn_wallets_input.json";
+const inputPath = process.argv[2] || "data/smart_wallets_input.json";
 const cfg = chainConfig();
 const outTxtPath = process.env.SMART_WALLET_ADDRESSES_PATH || cfg.defaultAddressesPath;
 const outMetaPath = process.env.SMART_WALLET_META_PATH || cfg.defaultMetaPath;
