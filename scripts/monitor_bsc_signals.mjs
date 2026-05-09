@@ -25,7 +25,16 @@ const allowOfficialSoloSignal = okxOfficialSoloAlert || envBool("ALLOW_OFFICIAL_
 const okxSignalWalletTypes = process.env.OKX_SIGNAL_WALLET_TYPES || String(okxOfficialRules.walletTypes || "1,3");
 const okxSignalLimit = envNumber("OKX_SIGNAL_LIMIT", okxOfficialRules.limit ?? 30);
 const okxSignalMinWallets = envNumber("OKX_SIGNAL_MIN_WALLETS", okxOfficialRules.minTriggerWallets ?? 6);
+const okxSignalMaxWallets = envNumberOrEmpty("OKX_SIGNAL_MAX_WALLETS", okxOfficialRules.maxTriggerWallets ?? "");
+const okxSignalMinAmountUsd = envNumberOrEmpty("OKX_SIGNAL_MIN_AMOUNT_USD", okxOfficialRules.minAmountUsd ?? "");
+const okxSignalMaxAmountUsd = envNumberOrEmpty("OKX_SIGNAL_MAX_AMOUNT_USD", okxOfficialRules.maxAmountUsd ?? "");
+const okxSignalMinMarketCapUsd = envNumberOrEmpty("OKX_SIGNAL_MIN_MARKET_CAP_USD", okxOfficialRules.minMarketCapUsd ?? "");
 const okxSignalMaxMarketCapUsd = envNumber("OKX_SIGNAL_MAX_MARKET_CAP_USD", okxOfficialRules.maxMarketCapUsd ?? 500_000);
+const okxSignalMinLiquidityUsd = envNumberOrEmpty("OKX_SIGNAL_MIN_LIQUIDITY_USD", okxOfficialRules.minLiquidityUsd ?? "");
+const okxSignalMaxLiquidityUsd = envNumberOrEmpty("OKX_SIGNAL_MAX_LIQUIDITY_USD", okxOfficialRules.maxLiquidityUsd ?? "");
+const okxSignalMinHolders = envNumber("OKX_SIGNAL_MIN_HOLDERS", okxOfficialRules.minHolders ?? 0);
+const okxSignalMaxTop10HolderPercent = envNumber("OKX_SIGNAL_MAX_TOP10_HOLDER_PERCENT", okxOfficialRules.maxTop10HolderPercent ?? 0);
+const okxSignalMaxSoldRatioPercent = envNumber("OKX_SIGNAL_MAX_SOLD_RATIO_PERCENT", okxOfficialRules.maxSoldRatioPercent ?? 100);
 const okxSignalMinCompositeScore = envNumber("OKX_SIGNAL_MIN_COMPOSITE_SCORE", okxOfficialRules.minCompositeScore ?? 3);
 const stopLossPct = Number(process.env.STOP_LOSS_PCT || -25);
 const takeProfit1Pct = Number(process.env.TAKE_PROFIT_1_PCT || 50);
@@ -150,7 +159,16 @@ function loadSignalRules(path) {
       walletTypes: "1,3",
       limit: 30,
       minTriggerWallets: 6,
+      maxTriggerWallets: "",
+      minAmountUsd: "",
+      maxAmountUsd: "",
+      minMarketCapUsd: "",
       maxMarketCapUsd: 500_000,
+      minLiquidityUsd: "",
+      maxLiquidityUsd: "",
+      minHolders: 0,
+      maxTop10HolderPercent: 0,
+      maxSoldRatioPercent: 100,
       minCompositeScore: 3,
     },
   };
@@ -167,10 +185,22 @@ function envNumber(name, fallback) {
   return Number.isFinite(n) ? n : Number(fallback);
 }
 
+function envNumberOrEmpty(name, fallback = "") {
+  const value = process.env[name] ?? fallback;
+  if (value === undefined || value === null || value === "") return "";
+  const n = Number(value);
+  return Number.isFinite(n) ? n : "";
+}
+
 function envBool(name, fallback = false) {
   const value = process.env[name];
   if (value === undefined || value === "") return Boolean(fallback);
   return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
+}
+
+function addCliFilter(args, flag, value) {
+  if (value === undefined || value === null || value === "") return;
+  args.push(flag, String(value));
 }
 
 function saveAll() {
@@ -559,7 +589,16 @@ function privateSignalEvents() {
 
 function okxSignalEvents() {
   if (!okxOfficialSignalEnabled) return [];
-  const j = runJson(["signal", "list", "--chain", "bsc", "--wallet-type", okxSignalWalletTypes, "--limit", String(okxSignalLimit)]);
+  const args = ["signal", "list", "--chain", "bsc", "--wallet-type", okxSignalWalletTypes, "--limit", String(okxSignalLimit)];
+  addCliFilter(args, "--min-address-count", okxSignalMinWallets);
+  addCliFilter(args, "--max-address-count", okxSignalMaxWallets);
+  addCliFilter(args, "--min-amount-usd", okxSignalMinAmountUsd);
+  addCliFilter(args, "--max-amount-usd", okxSignalMaxAmountUsd);
+  addCliFilter(args, "--min-market-cap-usd", okxSignalMinMarketCapUsd);
+  addCliFilter(args, "--max-market-cap-usd", okxSignalMaxMarketCapUsd);
+  addCliFilter(args, "--min-liquidity-usd", okxSignalMinLiquidityUsd);
+  addCliFilter(args, "--max-liquidity-usd", okxSignalMaxLiquidityUsd);
+  const j = runJson(args);
   const ws = pollWs(okxWsSignalId);
   const wsRows = Array.isArray(ws?.events) ? ws.events : Array.isArray(ws?.data) ? ws.data : [];
   const directWsRows = okxWsRows("dex-market-new-signal-openapi");
@@ -574,7 +613,13 @@ function okxSignalEvents() {
     const token = row.token || {};
     const count = Number(row.triggerWalletCount || 0);
     const mc = Number(token.marketCapUsd || 0);
+    const holders = Number(token.holders || 0);
+    const top10 = Number(token.top10HolderPercent || 0);
+    const soldRatio = Number(row.soldRatioPercent || 0);
     if (count < okxSignalMinWallets || !mc || mc > okxSignalMaxMarketCapUsd) continue;
+    if (okxSignalMinHolders && holders && holders < okxSignalMinHolders) continue;
+    if (okxSignalMaxTop10HolderPercent && top10 && top10 > okxSignalMaxTop10HolderPercent) continue;
+    if (Number.isFinite(soldRatio) && soldRatio > okxSignalMaxSoldRatioPercent) continue;
     const key = `okx:${row.timestamp}:${row.walletType}:${token.tokenAddress}`;
     if (!uniqPush(state, "alertKeys", key)) continue;
     events.push({
@@ -585,9 +630,9 @@ function okxSignalEvents() {
       signalTime: Number(row.timestamp || Date.now()),
       triggerWalletCount: count,
       amountUsd: Number(row.amountUsd || 0),
-      soldRatioPercent: Number(row.soldRatioPercent || 0),
-      holders: Number(token.holders || 0),
-      top10HolderPercent: Number(token.top10HolderPercent || 0),
+      soldRatioPercent: soldRatio,
+      holders,
+      top10HolderPercent: top10,
       marketCapUsd: mc,
       entryPrice: Number(row.price || 0),
       okxOfficialSignal: true,

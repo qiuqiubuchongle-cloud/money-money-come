@@ -109,11 +109,14 @@ Skill 会生成 `walletValueScore`，满分 100。它不是简单按收益排序
 除了你自己的私有地址池，监控器还可以接入 OKX 官方 Signal：
 
 - 读取 OKX 聚合聪明钱 / 鲸鱼买入信号
-- 根据触发钱包数、代币市值、组合分数做过滤
+- 使用 OnchainOS `signal list` 官方参数做预过滤
+- 再根据触发钱包数、代币市值、组合分数、持有人集中度和已卖比例做本地二次过滤
 - 可作为私有地址池的外部确认源
 - 也可以开启“OKX 官方独立提醒”，不依赖你的私有地址池同组共振
 
-默认配置：
+需要说明：`6 个触发钱包 / 50 万市值` **不是 OKX 官方强制标准**，而是本 Skill 为降低噪音设置的默认策略阈值。OKX / OnchainOS 提供的是信号数据和可选过滤参数，例如钱包类型、触发地址数、交易金额、市值、流动性、分页游标等；具体提醒阈值应该由用户按自己的地址池和风险偏好调整。
+
+本 Skill 默认策略：
 
 - `OKX_OFFICIAL_SIGNAL_ENABLED=1`
 - `OKX_OFFICIAL_SOLO_ALERT=1`
@@ -121,6 +124,11 @@ Skill 会生成 `walletValueScore`，满分 100。它不是简单按收益排序
 - `OKX_SIGNAL_MAX_MARKET_CAP_USD=500000`
 
 这能解释为什么有时 Telegram 没有信号：如果你的私有地址池没有同组共振，系统不会硬推噪音；开启 OKX 官方独立提醒后，信号来源会更宽，但仍然经过基础过滤。
+
+官方文档入口：
+
+- [OnchainOS 是什么](https://web3.okx.com/zh-hans/onchainos/dev-docs/home/what-is-onchainos)
+- `onchainos signal list --help` 可查看当前 CLI 支持的 Signal 过滤参数
 
 ## 自定义信号规则
 
@@ -147,7 +155,16 @@ cp config/signal-rules.example.json config/signal-rules.json
     "walletTypes": "1,3",
     "limit": 30,
     "minTriggerWallets": 6,
+    "maxTriggerWallets": "",
+    "minAmountUsd": "",
+    "maxAmountUsd": "",
+    "minMarketCapUsd": "",
     "maxMarketCapUsd": 500000,
+    "minLiquidityUsd": "",
+    "maxLiquidityUsd": "",
+    "minHolders": 0,
+    "maxTop10HolderPercent": 0,
+    "maxSoldRatioPercent": 100,
     "minCompositeScore": 3
   }
 }
@@ -172,10 +189,15 @@ STRONG_PRIVATE_WALLETS=3
 OKX_OFFICIAL_SIGNAL_ENABLED=1
 OKX_OFFICIAL_SOLO_ALERT=1
 OKX_SIGNAL_MIN_WALLETS=6
+OKX_SIGNAL_MIN_AMOUNT_USD=
+OKX_SIGNAL_MIN_LIQUIDITY_USD=
 OKX_SIGNAL_MAX_MARKET_CAP_USD=500000
+OKX_SIGNAL_MAX_SOLD_RATIO_PERCENT=100
 ```
 
 ## Telegram 信号卡
+
+![Telegram Wallet Card Demo](./assets/tg-wallet-card-demo.svg)
 
 触发后会发送 HTML 格式消息，大致如下：
 

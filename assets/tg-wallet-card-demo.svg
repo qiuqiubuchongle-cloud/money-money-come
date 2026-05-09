@@ -1,0 +1,86 @@
+<svg width="1280" height="760" viewBox="0 0 1280 760" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Telegram 钱包画像示意卡</title>
+  <desc id="desc">中文 Telegram 风格钱包画像示意图，展示 Money Money Come 的地址分析结果和信号卡片。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#050807"/>
+      <stop offset="1" stop-color="#101614"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="30" flood-color="#000000" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="760" fill="url(#bg)"/>
+
+  <g font-family="Inter, PingFang SC, Microsoft YaHei, Arial, sans-serif">
+    <text x="72" y="92" fill="#F4FFF8" font-size="42" font-weight="780">Telegram 钱包画像示意</text>
+    <text x="72" y="132" fill="#9FB1AA" font-size="20">更少数据堆叠，更清楚的结论、标签和跟踪建议。</text>
+
+    <g filter="url(#shadow)" transform="translate(72 176)">
+      <rect width="520" height="462" rx="28" fill="#0F1715" stroke="#263A32"/>
+      <rect x="28" y="28" width="464" height="58" rx="18" fill="#151F1B"/>
+      <text x="52" y="65" fill="#D8FF7A" font-size="24" font-weight="800">🧠 钱包画像报告</text>
+
+      <text x="36" y="130" fill="#F4FFF8" font-size="28" font-weight="780">链上小旋风｜热点组｜观察</text>
+      <text x="36" y="164" fill="#9FB1AA" font-size="18">7BLk...BLq8 ｜ Solana</text>
+
+      <g transform="translate(36 198)">
+        <rect width="128" height="58" rx="18" fill="#16231E"/>
+        <text x="20" y="25" fill="#9FB1AA" font-size="14">价值分</text>
+        <text x="20" y="48" fill="#36F097" font-size="24" font-weight="820">67</text>
+      </g>
+      <g transform="translate(180 198)">
+        <rect width="144" height="58" rx="18" fill="#16231E"/>
+        <text x="20" y="25" fill="#9FB1AA" font-size="14">已实现收益</text>
+        <text x="20" y="48" fill="#36F097" font-size="24" font-weight="820">+$4.9K</text>
+      </g>
+      <g transform="translate(340 198)">
+        <rect width="128" height="58" rx="18" fill="#16231E"/>
+        <text x="20" y="25" fill="#9FB1AA" font-size="14">胜率</text>
+        <text x="20" y="48" fill="#F4FFF8" font-size="24" font-weight="820">30.1%</text>
+      </g>
+
+      <g transform="translate(36 290)">
+        <text x="0" y="0" fill="#AFC2BA" font-size="18" font-weight="700">标签描述</text>
+        <text x="0" y="36" fill="#E4F3EC" font-size="20">擅长捕捉叙事，精准命中，</text>
+        <text x="0" y="66" fill="#E4F3EC" font-size="20">长期稳健盈利选手，链上小旋风。</text>
+      </g>
+
+      <g transform="translate(36 396)">
+        <rect width="432" height="38" rx="19" fill="#193026" stroke="#315B47"/>
+        <text x="22" y="25" fill="#CFF8DF" font-size="16" font-weight="760">建议：放入 SOL 热点观察池，等同组共振再提高权重</text>
+      </g>
+    </g>
+
+    <g filter="url(#shadow)" transform="translate(688 176)">
+      <rect width="520" height="462" rx="28" fill="#0F1715" stroke="#263A32"/>
+      <rect x="28" y="28" width="464" height="58" rx="18" fill="#151F1B"/>
+      <text x="52" y="65" fill="#D8FF7A" font-size="24" font-weight="800">🚨 分组信号提醒</text>
+
+      <text x="36" y="130" fill="#F4FFF8" font-size="28" font-weight="780">热点组同组共振</text>
+      <text x="36" y="164" fill="#9FB1AA" font-size="18">private + OKX Signal ｜ BSC</text>
+
+      <g transform="translate(36 200)">
+        <text x="0" y="0" fill="#AFC2BA" font-size="18" font-weight="700">市场数据</text>
+        <text x="0" y="36" fill="#E4F3EC" font-size="20">市值：$320.0K ｜ 流动性：$18.5K</text>
+        <text x="0" y="66" fill="#E4F3EC" font-size="20">持有人：142 ｜ Top10：31%</text>
+      </g>
+
+      <g transform="translate(36 304)">
+        <rect width="208" height="58" rx="18" fill="#16231E"/>
+        <text x="20" y="25" fill="#9FB1AA" font-size="14">私有地址池</text>
+        <text x="20" y="48" fill="#36F097" font-size="22" font-weight="820">2 个核心钱包</text>
+      </g>
+      <g transform="translate(260 304)">
+        <rect width="208" height="58" rx="18" fill="#16231E"/>
+        <text x="20" y="25" fill="#9FB1AA" font-size="14">OKX Signal</text>
+        <text x="20" y="48" fill="#36F097" font-size="22" font-weight="820">8 个触发钱包</text>
+      </g>
+
+      <g transform="translate(36 396)">
+        <rect width="432" height="38" rx="19" fill="#30261A" stroke="#5C4730"/>
+        <text x="22" y="25" fill="#FFE7BE" font-size="16" font-weight="760">提示：仅做链上提醒，不代表实盘建议</text>
+      </g>
+    </g>
+  </g>
+</svg>

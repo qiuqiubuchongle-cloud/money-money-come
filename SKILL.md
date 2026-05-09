@@ -197,6 +197,8 @@ Key fields:
 - `okxOfficial.enabled`: include OKX official Signal feed
 - `okxOfficial.soloAlert`: allow OKX official Signal to alert even without private grouped confirmation
 - `okxOfficial.minTriggerWallets`: minimum OKX aggregated trigger wallet count
+- `okxOfficial.maxMarketCapUsd`, `minAmountUsd`, `minLiquidityUsd`: optional OnchainOS `signal list` pre-filters
+- `okxOfficial.maxSoldRatioPercent`: local filter to avoid signals where trigger wallets have mostly exited
 
 Environment variables override JSON:
 
@@ -207,6 +209,8 @@ OKX_OFFICIAL_SIGNAL_ENABLED=1
 OKX_OFFICIAL_SOLO_ALERT=1
 OKX_SIGNAL_MIN_WALLETS=6
 ```
+
+Important: `OKX_SIGNAL_MIN_WALLETS=6` and `OKX_SIGNAL_MAX_MARKET_CAP_USD=500000` are this skill's default noise-control settings, not official OKX thresholds. OnchainOS provides the Signal feed and filter parameters; the alert policy remains user-configurable.
 
 GMGN / Binance data sources are optional enhancers. The baseline workflow should still be useful with:
 

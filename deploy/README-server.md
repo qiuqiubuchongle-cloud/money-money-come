@@ -52,7 +52,16 @@ cp config/signal-rules.example.json config/signal-rules.json
     "walletTypes": "1,3",
     "limit": 30,
     "minTriggerWallets": 6,
+    "maxTriggerWallets": "",
+    "minAmountUsd": "",
+    "maxAmountUsd": "",
+    "minMarketCapUsd": "",
     "maxMarketCapUsd": 500000,
+    "minLiquidityUsd": "",
+    "maxLiquidityUsd": "",
+    "minHolders": 0,
+    "maxTop10HolderPercent": 0,
+    "maxSoldRatioPercent": 100,
     "minCompositeScore": 3
   }
 }
@@ -66,6 +75,8 @@ cp config/signal-rules.example.json config/signal-rules.json
 - 想看 OKX 官方信号：保持 `okxOfficial.enabled=true` 与 `okxOfficial.soloAlert=true`
 - 想减少 OKX 信号：提高 `okxOfficial.minTriggerWallets`，例如改成 `8`
 
+`minTriggerWallets=6` 和 `maxMarketCapUsd=500000` 是本 Skill 的默认策略，不是 OKX 官方固定标准。OKX / OnchainOS 提供 Signal 数据和可选过滤参数，实际提醒阈值可以按你的风险偏好调整。
+
 服务器也支持用环境变量覆盖 JSON：
 
 ```bash
@@ -75,7 +86,10 @@ STRONG_PRIVATE_WALLETS=3
 OKX_OFFICIAL_SIGNAL_ENABLED=1
 OKX_OFFICIAL_SOLO_ALERT=1
 OKX_SIGNAL_MIN_WALLETS=6
+OKX_SIGNAL_MIN_AMOUNT_USD=
+OKX_SIGNAL_MIN_LIQUIDITY_USD=
 OKX_SIGNAL_MAX_MARKET_CAP_USD=500000
+OKX_SIGNAL_MAX_SOLD_RATIO_PERCENT=100
 ```
 
 ## 1. 拉取仓库

@@ -1,100 +1,130 @@
-<svg width="1536" height="864" viewBox="0 0 1536 864" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Money Money Come functional workflow</title>
-  <desc id="desc">A concise OnchainOS-style workflow diagram for wallet import, OKX profiling, scoring, grouping, and Telegram alerts.</desc>
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Money Money Come 产品流程图</title>
+  <desc id="desc">中文产品流程图，展示多链地址导入、OnchainOS 数据读取、聪明钱评分、分组信号规则、OKX Signal 和 Telegram 提醒。</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1536" y2="864" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#0E1514"/>
-      <stop offset="0.58" stop-color="#121B20"/>
-      <stop offset="1" stop-color="#10131A"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#050807"/>
+      <stop offset="0.62" stop-color="#0B1110"/>
+      <stop offset="1" stop-color="#101615"/>
     </linearGradient>
-    <linearGradient id="accent" x1="206" y1="188" x2="1328" y2="682" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#79E6B0"/>
-      <stop offset="0.52" stop-color="#5CB7FF"/>
-      <stop offset="1" stop-color="#B7A6FF"/>
+    <linearGradient id="green" x1="162" y1="140" x2="1416" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D8FF7A"/>
+      <stop offset="0.45" stop-color="#36F097"/>
+      <stop offset="1" stop-color="#7AC7FF"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000000" flood-opacity="0.25"/>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#000000" flood-opacity="0.38"/>
     </filter>
   </defs>
 
-  <rect width="1536" height="864" rx="0" fill="url(#bg)"/>
-  <rect x="64" y="58" width="1408" height="748" rx="28" fill="#111A1F" stroke="#26343A"/>
-  <rect x="96" y="92" width="1344" height="680" rx="20" fill="#121C22" stroke="#1F3036"/>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect x="56" y="52" width="1488" height="796" rx="34" fill="#0B100F" stroke="#1B2925"/>
 
-  <text x="132" y="154" fill="#F2F7F4" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="760">Money Money Come</text>
-  <text x="132" y="198" fill="#9EB2B0" font-family="Inter, Arial, sans-serif" font-size="22">OnchainOS smart-money wallet profiling skill</text>
-
-  <g transform="translate(1090 120)">
-    <rect width="218" height="44" rx="22" fill="#18272A" stroke="#2D4446"/>
-    <circle cx="26" cy="22" r="8" fill="#79E6B0"/>
-    <text x="46" y="29" fill="#CFE6E0" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="650">Analysis only by default</text>
-  </g>
-
-  <path d="M248 430H1288" stroke="url(#accent)" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
-  <path d="M1280 430L1256 416V444L1280 430Z" fill="#B7A6FF"/>
-
-  <g filter="url(#shadow)" font-family="Inter, Arial, sans-serif">
-    <g transform="translate(142 290)">
-      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
-      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
-      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">1</text>
-      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">Import wallets</text>
-      <text x="22" y="152" fill="#A7BAB7" font-size="17">GMGN-style address list</text>
-      <text x="22" y="181" fill="#A7BAB7" font-size="17">names and notes optional</text>
-      <rect x="22" y="206" width="116" height="24" rx="12" fill="#23353A"/>
-      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">user supplied</text>
-    </g>
-
-    <g transform="translate(402 290)">
-      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
-      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
-      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">2</text>
-      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">OKX profile</text>
-      <text x="22" y="152" fill="#A7BAB7" font-size="17">PnL, win rate, activity</text>
-      <text x="22" y="181" fill="#A7BAB7" font-size="17">meme market-cap preference</text>
-      <rect x="22" y="206" width="128" height="24" rx="12" fill="#23353A"/>
-      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">official data</text>
-    </g>
-
-    <g transform="translate(662 290)">
-      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
-      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
-      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">3</text>
-      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">Value score</text>
-      <text x="22" y="152" fill="#A7BAB7" font-size="17">profitability, consistency</text>
-      <text x="22" y="181" fill="#A7BAB7" font-size="17">activity and copyability</text>
-      <rect x="22" y="206" width="138" height="24" rx="12" fill="#23353A"/>
-      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">core / watch</text>
-    </g>
-
-    <g transform="translate(922 290)">
-      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
-      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
-      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">4</text>
-      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">Group pool</text>
-      <text x="22" y="152" fill="#A7BAB7" font-size="17">hot narrative, early hunter</text>
-      <text x="22" y="181" fill="#A7BAB7" font-size="17">stable profit, conviction</text>
-      <rect x="22" y="206" width="134" height="24" rx="12" fill="#23353A"/>
-      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">safeSignalPool</text>
-    </g>
-
-    <g transform="translate(1182 290)">
-      <rect width="220" height="246" rx="18" fill="#17242A" stroke="#2B3E45"/>
-      <rect x="22" y="22" width="56" height="56" rx="16" fill="#20363A"/>
-      <text x="40" y="60" fill="#79E6B0" font-size="28" font-weight="800">5</text>
-      <text x="22" y="114" fill="#F3F8F5" font-size="24" font-weight="760">TG alert</text>
-      <text x="22" y="152" fill="#A7BAB7" font-size="17">same-group concentration</text>
-      <text x="22" y="181" fill="#A7BAB7" font-size="17">readable signal cards</text>
-      <rect x="22" y="206" width="126" height="24" rx="12" fill="#23353A"/>
-      <text x="36" y="224" fill="#BFD3D0" font-size="13" font-weight="650">human review</text>
+  <g font-family="Inter, PingFang SC, Microsoft YaHei, Arial, sans-serif">
+    <text x="104" y="132" fill="#F4FFF8" font-size="54" font-weight="780">Money Money Come</text>
+    <text x="104" y="180" fill="#A8BBB3" font-size="24" font-weight="520">多链聪明钱画像与分组信号引擎</text>
+    <g transform="translate(1174 104)">
+      <rect width="270" height="48" rx="24" fill="#111B18" stroke="#294138"/>
+      <circle cx="30" cy="24" r="8" fill="#36F097"/>
+      <text x="50" y="31" fill="#DDF7EA" font-size="17" font-weight="700">默认仅分析与提醒</text>
     </g>
   </g>
 
-  <g transform="translate(132 626)" font-family="Inter, Arial, sans-serif">
-    <rect width="1272" height="86" rx="18" fill="#0F181D" stroke="#24363D"/>
-    <text x="28" y="35" fill="#E9F3F0" font-size="20" font-weight="720">Default signal rule</text>
-    <text x="28" y="64" fill="#9FB4B1" font-size="17">A formal alert requires multiple core wallets from the same positive group. External sources are optional confirmations, not required dependencies.</text>
-    <rect x="1026" y="24" width="206" height="38" rx="19" fill="#1B2B30" stroke="#355059"/>
-    <text x="1050" y="49" fill="#CFE6E0" font-size="15" font-weight="700">No auto trading</text>
+  <g filter="url(#softShadow)" font-family="Inter, PingFang SC, Microsoft YaHei, Arial, sans-serif">
+    <g transform="translate(104 246)">
+      <rect width="306" height="438" rx="24" fill="#101715" stroke="#263933"/>
+      <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">地址池输入</text>
+      <text x="28" y="90" fill="#9FB1AA" font-size="18">BSC / Solana 钱包列表</text>
+      <g transform="translate(28 130)">
+        <rect width="250" height="54" rx="16" fill="#17231F"/>
+        <text x="20" y="34" fill="#DFF7EA" font-size="17" font-weight="700">GMGN 风格 JSON</text>
+      </g>
+      <g transform="translate(28 202)">
+        <rect width="250" height="54" rx="16" fill="#17231F"/>
+        <text x="20" y="34" fill="#DFF7EA" font-size="17" font-weight="700">自定义名称 / 备注</text>
+      </g>
+      <g transform="translate(28 274)">
+        <rect width="250" height="54" rx="16" fill="#17231F"/>
+        <text x="20" y="34" fill="#DFF7EA" font-size="17" font-weight="700">批量导入与去重</text>
+      </g>
+      <text x="28" y="384" fill="#778981" font-size="15">数据由用户提供，不内置“神秘地址包”。</text>
+    </g>
+
+    <g transform="translate(462 246)">
+      <rect width="306" height="438" rx="24" fill="#101715" stroke="#263933"/>
+      <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">OnchainOS 数据层</text>
+      <text x="28" y="90" fill="#9FB1AA" font-size="18">读取画像、交易与市场信号</text>
+      <g transform="translate(28 128)">
+        <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
+        <text x="20" y="30" fill="#D8FF7A" font-size="17" font-weight="760">Wallet Profile</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">PnL / 胜率 / 活跃度</text>
+      </g>
+      <g transform="translate(28 218)">
+        <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
+        <text x="20" y="30" fill="#D8FF7A" font-size="17" font-weight="760">Tracker</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">私有地址池买入监控</text>
+      </g>
+      <g transform="translate(28 308)">
+        <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
+        <text x="20" y="30" fill="#D8FF7A" font-size="17" font-weight="760">OKX Signal</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">Smart Money / Whale 信号</text>
+      </g>
+    </g>
+
+    <g transform="translate(820 246)">
+      <rect width="306" height="438" rx="24" fill="#101715" stroke="#263933"/>
+      <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">画像评分与分组</text>
+      <text x="28" y="90" fill="#9FB1AA" font-size="18">把地址变成可解释信号源</text>
+      <g transform="translate(28 132)">
+        <rect width="250" height="52" rx="16" fill="#17231F"/>
+        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">价值分 0-100</text>
+      </g>
+      <g transform="translate(28 204)">
+        <rect width="250" height="52" rx="16" fill="#17231F"/>
+        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">核心 / 观察 / 降权 / 剔除</text>
+      </g>
+      <g transform="translate(28 276)">
+        <rect width="250" height="52" rx="16" fill="#17231F"/>
+        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">热点组 / 百倍组 / 盈利组</text>
+      </g>
+      <g transform="translate(28 352)">
+        <rect width="176" height="38" rx="19" fill="#20332B" stroke="#345A48"/>
+        <text x="22" y="25" fill="#CFF8DF" font-size="15" font-weight="760">safeSignalPool</text>
+      </g>
+    </g>
+
+    <g transform="translate(1178 246)">
+      <rect width="306" height="438" rx="24" fill="#101715" stroke="#263933"/>
+      <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">分组信号提醒</text>
+      <text x="28" y="90" fill="#9FB1AA" font-size="18">规则可自定义，TG 可读</text>
+      <g transform="translate(28 128)">
+        <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
+        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">私有同组共振</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">2 个或 3 个钱包由你配置</text>
+      </g>
+      <g transform="translate(28 218)">
+        <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
+        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">OKX 官方 Signal</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">官方参数预过滤 + 本地风控</text>
+      </g>
+      <g transform="translate(28 308)">
+        <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
+        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">Telegram 卡片</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">地址画像 / 信号等级 / 风险提示</text>
+      </g>
+    </g>
+  </g>
+
+  <path d="M416 465H456" stroke="url(#green)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M774 465H814" stroke="url(#green)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M1132 465H1172" stroke="url(#green)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M452 455L468 465L452 475V455Z" fill="#36F097"/>
+  <path d="M810 455L826 465L810 475V455Z" fill="#36F097"/>
+  <path d="M1168 455L1184 465L1168 475V455Z" fill="#36F097"/>
+
+  <g transform="translate(104 738)" font-family="Inter, PingFang SC, Microsoft YaHei, Arial, sans-serif">
+    <rect width="1380" height="68" rx="22" fill="#0F1715" stroke="#24372F"/>
+    <text x="28" y="43" fill="#DDF7EA" font-size="20" font-weight="760">核心原则：</text>
+    <text x="126" y="43" fill="#9FB1AA" font-size="19">官方数据负责“看见链上发生了什么”，Money Money Come 负责“筛掉噪音，只把值得复盘的信号送到你面前”。</text>
   </g>
 </svg>

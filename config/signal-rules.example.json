@@ -12,7 +12,16 @@
     "walletTypes": "1,3",
     "limit": 30,
     "minTriggerWallets": 6,
+    "maxTriggerWallets": "",
+    "minAmountUsd": "",
+    "maxAmountUsd": "",
+    "minMarketCapUsd": "",
     "maxMarketCapUsd": 500000,
+    "minLiquidityUsd": "",
+    "maxLiquidityUsd": "",
+    "minHolders": 0,
+    "maxTop10HolderPercent": 0,
+    "maxSoldRatioPercent": 100,
     "minCompositeScore": 3
   }
 }
