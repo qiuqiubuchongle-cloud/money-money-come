@@ -381,11 +381,23 @@ function uniqPush(obj, listName, key, max = 5000) {
 }
 
 function fmtUsd(value) {
+  if (value === undefined || value === null || value === "") return "n/a";
   const n = Number(value);
   if (!Number.isFinite(n)) return "n/a";
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
   return `$${n.toFixed(2)}`;
+}
+
+function fmtTokenPrice(value) {
+  if (value === undefined || value === null || value === "") return "n/a";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "n/a";
+  if (n === 0) return "0";
+  if (Math.abs(n) >= 1) return n.toFixed(6).replace(/\.?0+$/, "");
+  if (Math.abs(n) >= 0.000001) return n.toFixed(10).replace(/\.?0+$/, "");
+  const decimal = n.toFixed(18).replace(/\.?0+$/, "");
+  return decimal.length <= 20 ? decimal : n.toExponential(6);
 }
 
 function fmtPct(value) {
@@ -413,6 +425,15 @@ function firstFinite(...values) {
     if (Number.isFinite(n) && n !== 0) return n;
   }
   return 0;
+}
+
+function optionalNumber(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return undefined;
 }
 
 function percentToRate(value) {
@@ -619,11 +640,11 @@ function normalizeOkxSignalRows(rows) {
       walletTypeLabel: walletTypeLabel(row.walletType),
       amountUsd: Number(row.amountUsd || row.volumeUsd || row.amount || 0),
       soldRatioPercent: Number(row.soldRatioPercent || 0),
-      holders: Number(token.holders || row.holders || 0),
-      top10HolderPercent: Number(token.top10HolderPercent || row.top10HolderPercent || 0),
-      marketCapUsd: Number(token.marketCapUsd || row.marketCapUsd || row.marketCap || 0),
-      currentLiquidityUsd: Number(token.liquidityUsd || row.liquidityUsd || row.liquidity || 0),
-      entryPrice: Number(row.price || token.price || token.priceUsd || 0),
+      holders: optionalNumber(token.holders, row.holders),
+      top10HolderPercent: optionalNumber(token.top10HolderPercent, row.top10HolderPercent),
+      marketCapUsd: optionalNumber(token.marketCapUsd, row.marketCapUsd, row.marketCap),
+      currentLiquidityUsd: optionalNumber(token.liquidityUsd, row.liquidityUsd, row.liquidity),
+      entryPrice: optionalNumber(row.price, token.price, token.priceUsd),
       okxOfficialSignal: true,
       raw: row,
       reason: "OKX 官方 Signal",
@@ -1488,9 +1509,9 @@ function telegramOkxSignalMessage(event) {
     `📊 <b>OKX Signal 原始字段</b>`,
     `• 触发钱包：<b>${escapeHtml(event.triggerWalletCount || "n/a")}</b>`,
     `• 买入金额：${escapeHtml(fmtUsd(event.amountUsd))}`,
-    `• 触发价格：<code>${escapeHtml(event.entryPrice || "n/a")}</code>`,
+    `• 信号触发价：<code>${escapeHtml(fmtTokenPrice(event.entryPrice))}</code>`,
     `• 市值：${escapeHtml(fmtUsd(event.marketCapUsd))}`,
-    `• 流动性：${escapeHtml(fmtUsd(event.currentLiquidityUsd))}`,
+    `• 流动性：${escapeHtml(event.currentLiquidityUsd === undefined ? "Signal 未返回" : fmtUsd(event.currentLiquidityUsd))}`,
     `• 持有人：${escapeHtml(event.holders || "n/a")}`,
     `• 已卖比例：${escapeHtml(Number.isFinite(Number(event.soldRatioPercent)) ? `${Number(event.soldRatioPercent).toFixed(1)}%` : "n/a")}`,
     "",
