@@ -37,7 +37,7 @@
       <text x="28" y="90" fill="#9FB1AA" font-size="18">BSC / Solana 钱包列表</text>
       <g transform="translate(28 130)">
         <rect width="250" height="54" rx="16" fill="#17231F"/>
-        <text x="20" y="34" fill="#DFF7EA" font-size="17" font-weight="700">GMGN 风格 JSON</text>
+        <text x="20" y="34" fill="#DFF7EA" font-size="17" font-weight="700">聪明钱地址 JSON</text>
       </g>
       <g transform="translate(28 202)">
         <rect width="250" height="54" rx="16" fill="#17231F"/>

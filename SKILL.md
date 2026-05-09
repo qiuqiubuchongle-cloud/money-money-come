@@ -9,7 +9,7 @@ This skill is for building and operating a BSC or Solana smart-money analysis wo
 
 ## Use This Skill For
 
-- Importing GMGN-style wallet JSON batches
+- Importing user-supplied smart-money wallet JSON batches
 - Screening inactive wallets and keeping active ones
 - Classifying wallets into behavior groups such as:
   - `10K盈利冠军`
@@ -81,7 +81,7 @@ Use:
 npm run import-wallets -- <json-file>
 ```
 
-Input format should be GMGN-style:
+Input format should be a smart-money wallet list:
 
 ```json
 [
