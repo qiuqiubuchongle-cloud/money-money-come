@@ -19,13 +19,15 @@ import {
   walletTier,
   walletStyleLabel,
 } from "./lib_smart_wallets.mjs";
+import { chainConfig, normalizeWalletAddress } from "./chain_config.mjs";
 
-const metaPath = process.env.SMART_WALLET_META_PATH || "data/smart_wallet_meta.json";
-const walletScreenPath = process.env.BSC_WALLET_SCREEN_PATH || "data/bsc_wallet_screen.json";
-const okxChain = process.env.OKX_PROFILE_CHAIN || "bsc";
+const cfg = chainConfig();
+const metaPath = process.env.SMART_WALLET_META_PATH || cfg.defaultMetaPath;
+const walletScreenPath = process.env.WALLET_SCREEN_PATH || process.env.BSC_WALLET_SCREEN_PATH || cfg.defaultWalletScreenPath;
+const okxChain = process.env.OKX_PROFILE_CHAIN || cfg.okxChain;
 const timeFrame = String(process.env.OKX_PROFILE_TIME_FRAME_DAYS || "3");
 
-const walletArg = process.argv[2]?.toLowerCase();
+const walletArg = normalizeWalletAddress(process.argv[2], cfg);
 if (!walletArg) {
   console.error("Usage: node scripts/report_smart_wallet.mjs <wallet-address>");
   process.exit(1);
@@ -33,8 +35,8 @@ if (!walletArg) {
 
 const metaJson = loadJson(metaPath, { wallets: [] });
 const walletScreen = loadJson(walletScreenPath, {});
-const meta = (metaJson.wallets || []).find((row) => String(row.address || "").toLowerCase() === walletArg) || {};
-const balance = (walletScreen.keep || []).find((row) => String(row.address || "").toLowerCase() === walletArg) || {};
+const meta = (metaJson.wallets || []).find((row) => normalizeWalletAddress(row.address, cfg) === walletArg) || {};
+const balance = (walletScreen.keep || []).find((row) => normalizeWalletAddress(row.address, cfg) === walletArg) || {};
 
 const overviewRes = runOkxData([
   "market", "portfolio-overview",
@@ -90,9 +92,13 @@ const activeDaySet = new Set(
 
 const metrics = {
   walletAddress: walletArg,
+  chain: cfg.key,
+  chainLabel: cfg.chainLabel,
   walletName: String(meta.name || ""),
   walletEmoji: String(meta.emoji || ""),
+  balanceNative: finite(balance.balanceNative ?? balance.balanceBnb ?? balance.balanceSol),
   balanceBnb: finite(balance.balanceBnb),
+  balanceSol: finite(balance.balanceSol),
   nonce: finite(balance.nonce),
   tradeCount,
   buyCount,
@@ -138,6 +144,8 @@ const topWins = (overviewWins.length ? overviewWins : recentWins).slice(0, 3);
 
 const report = {
   generatedAt: new Date().toISOString(),
+  chain: cfg.key,
+  chainLabel: cfg.chainLabel,
   walletAddress: walletArg,
   walletName: metrics.walletName,
   walletEmoji: metrics.walletEmoji,

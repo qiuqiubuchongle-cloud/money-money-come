@@ -1,8 +1,10 @@
 import fs from "node:fs";
+import { chainConfig, normalizeWalletAddress } from "./chain_config.mjs";
 
 const inputPath = process.argv[2] || "data/gmgn_wallets_input.json";
-const outTxtPath = process.env.SMART_WALLET_ADDRESSES_PATH || "data/smart_wallet_addresses.txt";
-const outMetaPath = process.env.SMART_WALLET_META_PATH || "data/smart_wallet_meta.json";
+const cfg = chainConfig();
+const outTxtPath = process.env.SMART_WALLET_ADDRESSES_PATH || cfg.defaultAddressesPath;
+const outMetaPath = process.env.SMART_WALLET_META_PATH || cfg.defaultMetaPath;
 
 function loadJson(path) {
   return JSON.parse(fs.readFileSync(path, "utf8"));
@@ -27,11 +29,11 @@ function parseRows(value) {
   const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : [];
   return rows
     .map((row) => ({
-      address: String(row?.address || "").toLowerCase().trim(),
+      address: normalizeWalletAddress(row?.address, cfg),
       name: String(row?.name || "").trim(),
       emoji: String(row?.emoji || "").trim(),
     }))
-    .filter((row) => /^0x[a-f0-9]{40}$/.test(row.address));
+    .filter((row) => cfg.addressPattern.test(row.address));
 }
 
 const rows = parseRows(loadJson(inputPath));
@@ -68,6 +70,7 @@ saveJson(outMetaPath, {
 
 console.log(JSON.stringify({
   inputPath,
+  chain: cfg.key,
   imported: rows.length,
   totalAddresses: addresses.length,
   outTxtPath,

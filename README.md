@@ -2,7 +2,7 @@
 
 > 链上聪明钱画像 Skill：把你收藏的一堆钱包地址，整理成可筛选、可分组、可提醒的个性化信号池。
 
-`money-money-come` 是一个基于 **OnchainOS + OKX 官方链上画像能力** 的 BSC 聪明钱分析 Skill。  
+`money-money-come` 是一个基于 **OnchainOS + OKX 官方链上画像能力** 的 BSC / Solana 聪明钱分析 Skill。  
 它默认只做地址画像、分组筛选和 Telegram 信号提醒，不会自动交易。
 
 ![Money Money Come Flow](./assets/money-money-come-flow.svg)
@@ -26,7 +26,7 @@
 
 ### 1. 单地址画像
 
-输入一个 BSC 钱包地址，Skill 会基于 OKX 官方链上画像接口，输出一份简洁地址报告：
+输入一个 BSC 或 Solana 钱包地址，Skill 会基于 OKX 官方链上画像接口，输出一份简洁地址报告：
 
 - 已实现收益
 - 胜率
@@ -130,6 +130,7 @@ Skill 会生成一个 `walletValueScore`，满分 100。它不是单纯按收益
 
 ```bash
 OKX_PROFILE_TIME_FRAME_DAYS=3
+SMART_WALLET_CHAIN=bsc
 POLL_MS=60000
 MIN_PRIVATE_WALLETS=2
 PRIVATE_WINDOW_MS=600000
@@ -143,6 +144,38 @@ BINANCE_TOKEN_INFO_ENABLED=0
 - 新用户先保持 GMGN / Binance 关闭，只跑 OKX + 自己的钱包池
 - 地址池稳定后，再把 GMGN、Four.meme、Binance 作为辅助确认源
 - 不建议降低 `MIN_PRIVATE_WALLETS=2`，单地址买入很容易误报
+
+## BSC / Solana 双链用法
+
+BSC 是默认链。Solana 使用同一套画像、分组、导出逻辑，只需要换命令：
+
+```bash
+npm run sol:import-wallets -- examples/solana_wallets_input.example.json
+npm run sol:profiles
+npm run sol:wallet-groups
+npm run sol:export-curated
+```
+
+Solana 输出文件：
+
+- `data/smart_wallet_profiles_solana.json`
+- `data/smart_wallet_groups_solana.json`
+- `data/curated_smart_wallets_solana.json`
+- `data/curated_smart_wallets_solana.txt`
+
+单地址分析：
+
+```bash
+npm run sol:wallet-report -- <solana-wallet-address>
+```
+
+如果你让 Agent 分析一批 SOL 地址，可以直接说：
+
+```text
+把这批 SOL 聪明钱地址导入 money money come，生成画像、分组和安全观察池。
+```
+
+Agentic Wallet 负责登录、签名、转账、合约调用等钱包操作；聪明钱画像和链上数据读取，仍然来自 OnchainOS / OKX 的 market、tracker、portfolio 数据接口。换句话说：Agentic Wallet 不是“数据源”，它是“钱包执行层”。
 
 ## 安装
 
@@ -228,6 +261,12 @@ TELEGRAM_PROXY=
 npm run import-wallets -- examples/gmgn_wallets_input.example.json
 ```
 
+Solana 地址导入：
+
+```bash
+npm run sol:import-wallets -- examples/solana_wallets_input.example.json
+```
+
 仓库里的示例地址只用于说明格式，不代表高质量地址池。
 
 ### 4. 构建画像与分组
@@ -270,6 +309,17 @@ npm run monitor
 ```
 
 监控会读取已经生成好的画像和分组文件，基于 `safeSignalPool` 做集中买入提醒。
+
+## 为什么没有 Telegram 信号
+
+没有信号通常不是 TG 坏了，而是没有满足正式触发条件。当前服务器默认要求：
+
+- 10 个核心 BSC 地址
+- 同一分组内至少 2 个核心地址
+- 10 分钟内买入同一个合约
+- 通过基础流动性、持有人、合约风险和模拟入场过滤
+
+昨天到今天的诊断结果是：OKX tracker 能拉到这 10 个地址的买入记录，TG 测试也能发送成功；但出现的买入大多是单地址，或者同名不同合约，或者同合约两笔刚好超过 10 分钟窗口，所以没有正式推送。
 
 ## 当前边界
 

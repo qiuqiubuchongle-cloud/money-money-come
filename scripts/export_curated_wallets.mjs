@@ -1,9 +1,11 @@
 import fs from "node:fs";
 import { loadJson, finite, isSafeSignalCandidate } from "./lib_smart_wallets.mjs";
+import { chainConfig } from "./chain_config.mjs";
 
-const profilesPath = process.env.SMART_WALLET_PROFILES_PATH || "data/smart_wallet_profiles_bsc.json";
-const outJsonPath = process.env.CURATED_WALLETS_JSON_PATH || "data/curated_smart_wallets_bsc.json";
-const outTxtPath = process.env.CURATED_WALLETS_TXT_PATH || "data/curated_smart_wallets_bsc.txt";
+const cfg = chainConfig();
+const profilesPath = process.env.SMART_WALLET_PROFILES_PATH || cfg.defaultProfilesPath;
+const outJsonPath = process.env.CURATED_WALLETS_JSON_PATH || cfg.defaultCuratedJsonPath;
+const outTxtPath = process.env.CURATED_WALLETS_TXT_PATH || cfg.defaultCuratedTxtPath;
 
 const json = loadJson(profilesPath, { profiles: [] });
 const profiles = Array.isArray(json.profiles) ? json.profiles : [];
@@ -36,6 +38,8 @@ const curated = profiles
 
 fs.writeFileSync(outJsonPath, JSON.stringify({
   generatedAt: new Date().toISOString(),
+  chain: cfg.key,
+  chainLabel: cfg.chainLabel,
   total: curated.length,
   wallets: curated,
 }, null, 2));
@@ -44,5 +48,6 @@ fs.writeFileSync(outTxtPath, `${curated.map((row) => row.walletAddress).join("\n
 console.log(JSON.stringify({
   outJsonPath,
   outTxtPath,
+  chain: cfg.key,
   total: curated.length,
 }, null, 2));

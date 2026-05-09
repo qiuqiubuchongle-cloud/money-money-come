@@ -6,9 +6,11 @@ import {
   isPositiveSignalProfile,
   isSafeSignalCandidate,
 } from "./lib_smart_wallets.mjs";
+import { chainConfig } from "./chain_config.mjs";
 
-const profilesPath = process.env.SMART_WALLET_PROFILES_PATH || "data/smart_wallet_profiles_bsc.json";
-const outPath = process.env.SMART_WALLET_GROUPS_PATH || "data/smart_wallet_groups_bsc.json";
+const cfg = chainConfig();
+const profilesPath = process.env.SMART_WALLET_PROFILES_PATH || cfg.defaultProfilesPath;
+const outPath = process.env.SMART_WALLET_GROUPS_PATH || cfg.defaultGroupsPath;
 
 const json = loadJson(profilesPath, { profiles: [] });
 const profiles = Array.isArray(json.profiles) ? json.profiles : [];
@@ -66,7 +68,7 @@ const safeSignalPool = signalPool.filter((row) => row.safeCandidate);
 const excludedSignalPool = signalPool.filter((row) => !row.safeCandidate);
 
 const tgTemplate = {
-  title: "BSC 聪明钱分组信号",
+  title: `${cfg.shortLabel} 聪明钱分组信号`,
   triggerRule: "当同一分组内 >= 2 个安全正向地址在窗口期内集中买入同一 token 时提醒",
   fields: [
     "分组名",
@@ -80,6 +82,8 @@ const tgTemplate = {
 
 const output = {
   generatedAt: new Date().toISOString(),
+  chain: cfg.key,
+  chainLabel: cfg.chainLabel,
   totalProfiles: profiles.length,
   groupNames: Object.keys(groups),
   groups,
@@ -98,6 +102,7 @@ const output = {
 fs.writeFileSync(outPath, JSON.stringify(output, null, 2));
 console.log(JSON.stringify({
   outPath,
+  chain: cfg.key,
   totalProfiles: output.totalProfiles,
   groupNames: output.groupNames,
   signalPoolSize: signalPool.length,

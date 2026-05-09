@@ -1,11 +1,11 @@
 ---
 name: money-money-come
-description: Use this skill when the user wants to analyze a batch of BSC smart-money addresses, classify wallets by PnL and trading style, generate concise wallet reports, build safe signal pools, export curated wallets, and alert when multiple wallets in the same positive group concentrate buys on the same meme token. Default to analysis and alerts only; do not enable trading execution unless the user explicitly asks and separate safety checks are in place.
+description: Use this skill when the user wants to analyze a batch of BSC or Solana smart-money addresses, classify wallets by PnL and trading style, generate concise wallet reports, build safe signal pools, export curated wallets, and alert when multiple wallets in the same positive group concentrate buys on the same meme token. Default to analysis and alerts only; do not enable trading execution unless the user explicitly asks and separate safety checks are in place.
 ---
 
 # Money Money Come
 
-This skill is for building and operating a BSC smart-money analysis workflow around user-supplied wallet lists.
+This skill is for building and operating a BSC or Solana smart-money analysis workflow around user-supplied wallet lists.
 
 ## Use This Skill For
 
@@ -22,6 +22,7 @@ This skill is for building and operating a BSC smart-money analysis workflow aro
 - Building a safe signal pool for alerts
 - Preparing Telegram alert payloads for grouped concentration buys
 - Running a useful baseline workflow with OKX data only, while keeping GMGN / Binance as optional enhancers
+- Running Solana address analysis with `SMART_WALLET_CHAIN=solana` or the `sol:*` npm scripts
 
 ## Safety Defaults
 
@@ -46,6 +47,27 @@ This skill is for building and operating a BSC smart-money analysis workflow aro
 - Shared helpers and rules: `scripts/lib_smart_wallets.mjs`
 - Existing monitor pipeline: `scripts/monitor_bsc_signals.mjs`
 - Setup checklist: `references/setup-checklist.md`
+
+## Chain Selection
+
+BSC is the default chain.
+
+Use Solana mode with:
+
+```bash
+SMART_WALLET_CHAIN=solana npm run import-wallets -- <json-file>
+npm run sol:profiles
+npm run sol:wallet-groups
+npm run sol:export-curated
+```
+
+Solana outputs use `_solana` filenames:
+
+- `data/smart_wallet_profiles_solana.json`
+- `data/smart_wallet_groups_solana.json`
+- `data/curated_smart_wallets_solana.json`
+
+Agentic Wallet is the wallet execution layer for login, signing, transfers, and contract calls. Wallet profiling data should still be read through OnchainOS / OKX market, tracker, and portfolio data commands.
 
 ## Standard Workflow
 

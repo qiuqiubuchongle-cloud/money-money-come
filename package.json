@@ -2,7 +2,7 @@
   "name": "money-money-come",
   "version": "0.1.0",
   "private": true,
-  "description": "BSC smart money wallet profiling, grouping, curated export, and grouped buy alerts.",
+  "description": "BSC and Solana smart money wallet profiling, grouping, curated export, and grouped buy alerts.",
   "scripts": {
     "import-wallets": "node scripts/import_gmgn_wallets.mjs",
     "profiles": "node scripts/build_smart_wallet_profiles.mjs",
@@ -10,6 +10,11 @@
     "wallet-report-tg": "node scripts/send_wallet_report_to_tg.mjs",
     "wallet-groups": "node scripts/report_smart_wallet_groups.mjs",
     "export-curated": "node scripts/export_curated_wallets.mjs",
+    "sol:import-wallets": "SMART_WALLET_CHAIN=solana node scripts/import_gmgn_wallets.mjs",
+    "sol:profiles": "SMART_WALLET_CHAIN=solana node scripts/build_smart_wallet_profiles.mjs",
+    "sol:wallet-report": "SMART_WALLET_CHAIN=solana node scripts/report_smart_wallet.mjs",
+    "sol:wallet-groups": "SMART_WALLET_CHAIN=solana node scripts/report_smart_wallet_groups.mjs",
+    "sol:export-curated": "SMART_WALLET_CHAIN=solana node scripts/export_curated_wallets.mjs",
     "monitor": "node scripts/monitor_bsc_signals.mjs",
     "telegram-bridge": "node scripts/telegram_bridge.mjs"
   }

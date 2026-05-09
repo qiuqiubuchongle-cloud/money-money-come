@@ -19,19 +19,22 @@ import {
   walletTier,
   walletStyleLabel,
 } from "./lib_smart_wallets.mjs";
-const walletScreenPath = process.env.BSC_WALLET_SCREEN_PATH || "data/bsc_wallet_screen.json";
-const trackerActivityPath = process.env.OKX_TRACKER_ACTIVITY_PATH || "data/okx_tracker_activity.json";
-const recentBuysPath = process.env.SMART_WALLET_RECENT_BUYS_PATH || "data/smart_wallet_recent_buys_bsc.json";
-const outPath = process.env.SMART_WALLET_PROFILES_PATH || "data/smart_wallet_profiles_bsc.json";
-const metaPath = process.env.SMART_WALLET_META_PATH || "data/smart_wallet_meta.json";
-const okxChain = process.env.OKX_PROFILE_CHAIN || "bsc";
+import { chainConfig, normalizeWalletAddress } from "./chain_config.mjs";
+
+const cfg = chainConfig();
+const walletScreenPath = process.env.WALLET_SCREEN_PATH || process.env.BSC_WALLET_SCREEN_PATH || cfg.defaultWalletScreenPath;
+const trackerActivityPath = process.env.OKX_TRACKER_ACTIVITY_PATH || cfg.defaultTrackerActivityPath;
+const recentBuysPath = process.env.SMART_WALLET_RECENT_BUYS_PATH || cfg.defaultRecentBuysPath;
+const outPath = process.env.SMART_WALLET_PROFILES_PATH || cfg.defaultProfilesPath;
+const metaPath = process.env.SMART_WALLET_META_PATH || cfg.defaultMetaPath;
+const okxChain = process.env.OKX_PROFILE_CHAIN || cfg.okxChain;
 const okxTimeFrameDays = String(process.env.OKX_PROFILE_TIME_FRAME_DAYS || "3");
 const okxEnabled = process.env.OKX_PROFILE_ENABLED !== "0";
 const okxHistoryEnabled = process.env.OKX_PROFILE_HISTORY_ENABLED !== "0";
 const okxRecentPnlEnabled = process.env.OKX_PROFILE_RECENT_PNL_ENABLED !== "0";
 const okxTimeoutMs = Number(process.env.OKX_PROFILE_TIMEOUT_MS || 18_000);
 const okxHistoryLimit = Number(process.env.OKX_PROFILE_HISTORY_LIMIT || 120);
-const okxCachePath = process.env.OKX_PROFILE_CACHE_PATH || "data/okx_wallet_profile_cache.json";
+const okxCachePath = process.env.OKX_PROFILE_CACHE_PATH || cfg.defaultCachePath;
 const okxCacheTtlMs = Number(process.env.OKX_PROFILE_CACHE_TTL_MS || 30 * 60_000);
 const walletSelectionMode = process.env.SMART_WALLET_SELECTION_MODE || "meta_if_present";
 
@@ -135,16 +138,16 @@ function buildProfiles() {
   const recentBuys = loadJson(recentBuysPath, []);
   const walletMeta = loadJson(metaPath, {});
 
-  const balances = new Map((walletScreen.keep || []).map((row) => [String(row.address || "").toLowerCase(), row]));
-  const tracker = new Map((trackerActivity.active || []).map((row) => [String(row.walletAddress || "").toLowerCase(), row]));
+  const balances = new Map((walletScreen.keep || []).map((row) => [normalizeWalletAddress(row.address, cfg), row]));
+  const tracker = new Map((trackerActivity.active || []).map((row) => [normalizeWalletAddress(row.walletAddress, cfg), row]));
   const metaWalletRows = Array.isArray(walletMeta.wallets) ? walletMeta.wallets : [];
   const metaByWallet = new Map(
-    metaWalletRows.map((row) => [String(row.address || "").toLowerCase(), row]).filter(([wallet]) => wallet)
+    metaWalletRows.map((row) => [normalizeWalletAddress(row.address, cfg), row]).filter(([wallet]) => wallet)
   );
   const buyRows = Array.isArray(recentBuys) ? recentBuys : [];
   const buysByWallet = new Map();
   for (const row of buyRows) {
-    const wallet = String(row.walletAddress || "").toLowerCase();
+    const wallet = normalizeWalletAddress(row.walletAddress, cfg);
     if (!wallet) continue;
     const list = buysByWallet.get(wallet) || [];
     list.push(row);
@@ -231,7 +234,11 @@ function buildProfiles() {
       walletAddress: wallet,
       walletName: String(meta.name || ""),
       walletEmoji: String(meta.emoji || ""),
+      chain: cfg.key,
+      chainLabel: cfg.chainLabel,
+      balanceNative: finite(balance.balanceNative ?? balance.balanceBnb ?? balance.balanceSol),
       balanceBnb: finite(balance.balanceBnb),
+      balanceSol: finite(balance.balanceSol),
       nonce: finite(balance.nonce),
       tradeCount,
       buyCount,
@@ -307,6 +314,8 @@ function buildProfiles() {
 
   return {
     generatedAt: new Date(now).toISOString(),
+    chain: cfg.key,
+    chainLabel: cfg.chainLabel,
     total: profiles.length,
     groups,
     profiles,
