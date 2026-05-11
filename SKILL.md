@@ -7,7 +7,7 @@ description: Use this skill when the user wants to analyze BSC or Solana smart-m
 
 This skill is for building and operating a BSC / Solana smart-money analysis workflow and an ETH meme signal interpretation workflow around user-supplied wallet lists.
 
-It should behave like a signal interpretation layer, not a raw signal relay. GMGN-style feeds are already strong at speed; this skill should be stronger at wallet quality, group interpretation, noise reduction, and concise explanation.
+It should behave like a signal interpretation layer, not a raw signal relay. It should be strong at wallet quality, group interpretation, noise reduction, and concise explanation.
 
 ## Use This Skill For
 
@@ -23,7 +23,7 @@ It should behave like a signal interpretation layer, not a raw signal relay. GMG
 - Producing a concise single-wallet report
 - Building a safe signal pool for alerts
 - Preparing Telegram alert payloads for grouped concentration buys
-- Running a useful baseline workflow with OKX data only, while keeping GMGN / Binance as optional enhancers
+- Running a useful baseline workflow with OKX data only, while keeping third-party market feeds as optional enhancers
 - Running Solana address analysis with `SMART_WALLET_CHAIN=solana` or the `sol:*` npm scripts
 - Configuring private grouped buy rules and OKX official Signal alerts for Telegram
 - Turning raw wallet activity into a small set of explainable, high-signal alerts
@@ -313,7 +313,7 @@ When improving this skill, prioritize these upgrade paths:
    - Add one line that explains why the alert exists
    - Avoid flooding the user with raw fields
 
-GMGN / Binance data sources are optional enhancers. The baseline workflow should still be useful with:
+Third-party market data sources are optional enhancers. The baseline workflow should still be useful with:
 
 - wallet import
 - OKX profile generation
