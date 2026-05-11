@@ -18,6 +18,7 @@ import {
   walletValueScore,
   walletTier,
   walletStyleLabel,
+  walletPersona,
 } from "./lib_smart_wallets.mjs";
 import { chainConfig, normalizeWalletAddress } from "./chain_config.mjs";
 
@@ -125,6 +126,15 @@ const cls = classifyWallet(metrics);
 const valueScore = walletValueScore(metrics);
 const tier = walletTier({ ...metrics, walletValueScore: valueScore });
 const styleLabel = walletStyleLabel(metrics);
+const persona = walletPersona({
+  ...metrics,
+  profile: cls.primary,
+  labels: cls.labels,
+  reliabilityScore: cls.reliabilityScore,
+  walletValueScore: valueScore,
+  walletTier: tier,
+  walletStyleLabel: styleLabel,
+});
 const overviewWins = Array.isArray(overview?.topPnlTokenList) ? overview.topPnlTokenList.map((row) => ({
   token: String(row.tokenContractAddress || row.token || "").toLowerCase(),
   tokenSymbol: String(row.tokenSymbol || row.symbol || "UNKNOWN"),
@@ -156,7 +166,21 @@ const report = {
   walletValueScore: valueScore,
   walletTier: tier,
   walletStyleLabel: styleLabel,
-  summary: describeWallet({ ...metrics, profile: cls.primary, walletValueScore: valueScore, walletTier: tier, walletStyleLabel: styleLabel }),
+  walletPersona: persona,
+  personaName: persona.personaName,
+  personaCode: persona.personaCode,
+  personaIdentity: persona.identity,
+  personaConfidence: persona.confidence,
+  humanScore: persona.humanScore,
+  botScore: persona.botScore,
+  trackingPool: persona.tracking.pool,
+  walletDecision: persona.decision,
+  decisionGrade: persona.decision.grade,
+  decisionVerdict: persona.decision.verdict,
+  trustScore: persona.decision.trustScore,
+  watchMode: persona.decision.watchMode,
+  watchModeLabel: persona.decision.watchModeLabel,
+  summary: describeWallet({ ...metrics, profile: cls.primary, walletValueScore: valueScore, walletTier: tier, walletStyleLabel: styleLabel, walletPersona: persona }),
   metrics,
   topWins,
   overview,

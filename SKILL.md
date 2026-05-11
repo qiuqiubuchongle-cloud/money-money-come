@@ -1,18 +1,20 @@
 ---
 name: money-money-come
-description: Use this skill when the user wants to analyze BSC or Solana smart-money addresses, classify wallets by PnL and trading style, build safe signal pools, or run ETH meme signal monitoring that merges OKX Signal, hot-token volume, private watch-wallet buys, signal grading, lifecycle awareness, risk scoring, wallet clusters, and Telegram alerts. Default to analysis and alerts only; do not enable trading execution unless the user explicitly asks and separate safety checks are in place.
+description: Use this skill when the user wants to analyze BSC or Solana smart-money addresses, generate Wallet Persona chain-behavior profiles, classify wallets by identity/persona/PnL/trading style, build safe signal pools, or run ETH meme signal monitoring that merges OKX Signal, hot-token volume, private watch-wallet buys, signal grading, lifecycle awareness, risk scoring, wallet clusters, and Telegram alerts. Default to analysis and alerts only; do not enable trading execution unless the user explicitly asks and separate safety checks are in place.
 ---
 
 # Money Money Come
 
-This skill is for building and operating a BSC / Solana smart-money analysis workflow and an ETH meme signal interpretation workflow around user-supplied wallet lists.
+This skill is for building and operating a BSC / Solana smart-money address intelligence workflow around user-supplied wallet lists. ETH meme signal monitoring is auxiliary; the core product value is wallet analysis, screening, and reusable address judgment.
 
-It should behave like a signal interpretation layer, not a raw signal relay. It should be strong at wallet quality, group interpretation, noise reduction, and concise explanation.
+Its strongest product direction is address understanding: turn a raw wallet into a Wallet Persona with identity, behavior style, evidence, ability radar, and a Wallet Decision with tracking grade, trust score, watch mode, trigger rule, risks, and invalidation conditions. It should behave like a wallet judgment layer, not a raw signal relay.
 
 ## Use This Skill For
 
 - Importing user-supplied smart-money wallet JSON batches
 - Screening inactive wallets and keeping active ones
+- Generating Wallet Persona profiles with persona name, identity, confidence, evidence, human/bot score, ability radar, and tracking advice
+- Generating Wallet Decision outputs with A/B/C/D grade, trust score, watch mode, trigger rule, risks, and invalidation conditions
 - Classifying wallets into behavior groups such as:
   - `10K盈利冠军`
   - `百倍金狗选手`
@@ -27,6 +29,7 @@ It should behave like a signal interpretation layer, not a raw signal relay. It 
 - Running Solana address analysis with `SMART_WALLET_CHAIN=solana` or the `sol:*` npm scripts
 - Configuring private grouped buy rules and OKX official Signal alerts for Telegram
 - Turning raw wallet activity into a small set of explainable, high-signal alerts
+- Turning raw wallet notes into a practical address book: discovery sources, confirmation sources, background references, and excluded noise
 - Running ETH meme radar with OKX Signal + hot-token volume + private watch-wallet first buys
 - Reviewing emitted ETH signal journal rows to learn which source combos and stages are noisy
 - Generating a Daily Alpha Brief from emitted ETH journal rows
@@ -373,9 +376,14 @@ When walking the user through setup, read `references/setup-checklist.md`.
 
 When reporting results to the user:
 
-- Lead with the wallet’s main label, value tier, and whether it belongs in the safe signal pool
+- Lead with the wallet’s persona name, identity, tracking pool, and whether it belongs in the safe signal pool
+- Include the Wallet Decision verdict, grade, trust score, and watch mode when available
 - Keep the explanation concise, lively, and decision-oriented
 - Mention:
+  - persona confidence
+  - human score / bot score when useful
+  - ability radar summary
+  - evidence supporting the persona
   - wallet value score / tier
   - realized PnL
   - win rate
@@ -383,6 +391,65 @@ When reporting results to the user:
   - low market cap preference
   - whether it should be monitored, down-ranked, or removed
 - Do not foreground loss lists in Telegram wallet cards; keep loss/risk details for local JSON or deeper review
+
+## Wallet Persona Rules
+
+Wallet Persona is not a vibe label. Every persona should be backed by evidence from metrics such as:
+
+- trade sample size and unique token count
+- realized PnL and win rate
+- low-market-cap buy ratio and median entry market cap
+- recent activity and average trades per day
+- repeated buys / conviction behavior
+- high-frequency or bot-like behavior
+
+Supported persona examples:
+
+- `early_narrative_hunter`: 早期叙事猎人
+- `steady_profit_operator`: 稳健盈利派
+- `conviction_reloader`: 信仰加仓派
+- `hot_rotation_trader`: 热点切换手
+- `route_bot`: 链上打点机
+- `late_fomo_chaser`: 后排冲锋号
+- `sleeping_wallet`: 沉睡旧钱包
+- `balanced_observer`: 均衡观察员
+
+Strong claims like project party, insider, entity cluster, or bot should be phrased as candidate/suspected unless the evidence is explicit. Prefer "疑似机器人/高频噪音" over declaring certainty.
+
+## Wallet Decision Rules
+
+Wallet Decision is the practical layer on top of Wallet Persona. It answers: should this address be tracked, and how?
+
+Decision grades:
+
+- `A / 重点跟踪`: core watch candidate. Can act as discovery or confirmation source depending on persona.
+- `B / 观察验证`: useful but needs same-group or external confirmation before a formal alert.
+- `C / 只看题材`: keep as context only; do not let it trigger alerts alone.
+- `D / 排除留档`: exclude from signal pool unless the wallet materially changes behavior later.
+
+Watch modes:
+
+- `discovery_and_confirm`: can be used for both early discovery and grouped confirmation.
+- `discovery`: good at surfacing themes, but should wait for another wallet/source before alerting.
+- `confirm`: slower but more reliable; useful for confirmation rather than first touch.
+- `conviction`: watch repeated buys and exits; do not blindly chase the first buy.
+- `background`: context only.
+- `archive`: excluded from signal logic.
+
+The decision should include:
+
+- `trustScore`: combined score from value score, reliability, persona confidence, copyability, exit discipline, human score, bot score, sample size, and recency.
+- `reasons`: short evidence-backed reasons for the decision.
+- `risks`: current reasons to distrust or down-rank the address.
+- `triggerRule`: how this wallet should participate in signal rules.
+- `invalidators`: what future behavior should lower its weight.
+
+When explaining to the user, make the decision actionable:
+
+- Say whether it should enter the core pool, observe pool, background pool, or exclusion pool.
+- Say whether it is a discovery source or confirmation source.
+- Avoid saying a single wallet buy is enough unless the user explicitly configures that.
+- If the address looks bot-like, say it is useful for noise detection rather than copy-trading.
 
 ## Telegram Alert Intent
 

@@ -76,6 +76,10 @@ function shortAddress(address) {
 }
 
 function recommendation(report) {
+  const persona = report.walletPersona || {};
+  if (persona.decision?.action) return persona.decision.action;
+  if (report.walletDecision?.action) return report.walletDecision.action;
+  if (persona.tracking?.action) return persona.tracking.action;
   const m = report.metrics || {};
   if (report.walletTier === "核心") {
     return "进核心池。等同组共振，不抢单。";
@@ -152,10 +156,17 @@ function buildText(report) {
   const m = report.metrics || {};
   const wins = Array.isArray(report.topWins) ? report.topWins.slice(0, 2) : [];
   const address = report.walletAddress || "";
-  const profile = report.walletStyleLabel || report.profileLabel || report.profile || "n/a";
+  const persona = report.walletPersona || {};
+  const profile = persona.personaName || report.walletStyleLabel || report.profileLabel || report.profile || "n/a";
+  const identity = persona.identity || report.personaIdentity || "n/a";
   const group = report.signalGroup || "n/a";
   const score = report.walletValueScore ?? report.reliabilityScore ?? "n/a";
   const tier = report.walletTier || "观察";
+  const traits = Array.isArray(persona.traits) ? persona.traits.slice(0, 4).join(" / ") : "";
+  const ability = persona.ability || {};
+  const decision = persona.decision || report.walletDecision || {};
+  const reasons = Array.isArray(decision.reasons) ? decision.reasons.slice(0, 2) : [];
+  const risks = Array.isArray(decision.risks) ? decision.risks.slice(0, 1) : [];
 
   return [
     "🧠 <b>聪明钱画像卡</b>",
@@ -164,8 +175,12 @@ function buildText(report) {
     `🔗 <code>${escapeHtml(shortAddress(address))}</code>`,
     `<code>${escapeHtml(address)}</code>`,
     "",
-    `📌 <b>画像</b>：${escapeHtml(profile)} ｜ ${escapeHtml(group)} ｜ ${escapeHtml(tier)}`,
+    `📌 <b>画像</b>：${escapeHtml(profile)} ｜ ${escapeHtml(identity)} ｜ ${escapeHtml(tier)}`,
+    decision.verdict ? `🎯 <b>判断</b>：${escapeHtml(decision.verdict)} ｜ ${escapeHtml(decision.grade || "n/a")}级 ｜ 信任分 ${escapeHtml(decision.trustScore ?? "n/a")}` : "",
+    decision.watchModeLabel ? `🧭 <b>用途</b>：${escapeHtml(decision.watchModeLabel)}` : "",
     `⭐ <b>价值分</b>：${escapeHtml(score)}/100`,
+    persona.confidence ? `🧬 <b>置信度</b>：${escapeHtml(persona.confidence)} ｜ 真人感 ${escapeHtml(persona.humanScore ?? "n/a")} ｜ 机器人感 ${escapeHtml(persona.botScore ?? "n/a")}` : "",
+    traits ? `🏷️ <b>人设标签</b>：${escapeHtml(traits)}` : "",
     `📝 <b>结论</b>：${escapeHtml(report.summary || "暂无摘要")}`,
     "",
     "📊 <b>核心数据</b>",
@@ -173,12 +188,15 @@ function buildText(report) {
     `• 胜率：<b>${escapeHtml(fmtPlainPct(m.winRatePct))}</b>`,
     `• 最近活跃：${escapeHtml(fmtHours(m.latestTradeAgeHours))}`,
     `• 低市值偏好：${escapeHtml(fmtPlainPct(m.lowMcBuyPct))}`,
+    ability.discovery !== undefined ? `• 能力雷达：发现 ${escapeHtml(ability.discovery)} / 纪律 ${escapeHtml(ability.exitDiscipline)} / 可跟 ${escapeHtml(ability.copyability)}` : "",
+    reasons.length ? `• 判断依据：${escapeHtml(reasons.join("；"))}` : "",
+    risks.length ? `• 主要风险：${escapeHtml(risks.join("；"))}` : "",
     "",
     "🏆 <b>代表战绩</b>",
     formatTokenRows(wins, true),
     "",
     `🎯 <b>跟踪建议</b>：${escapeHtml(recommendation(report))}`,
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 const run = spawnSync("node", ["scripts/report_smart_wallet.mjs", walletArg], {

@@ -18,6 +18,7 @@ import {
   walletValueScore,
   walletTier,
   walletStyleLabel,
+  walletPersona,
 } from "./lib_smart_wallets.mjs";
 import { chainConfig, normalizeWalletAddress } from "./chain_config.mjs";
 
@@ -280,6 +281,15 @@ function buildProfiles() {
     const walletValue = walletValueScore(metrics);
     const tier = walletTier({ ...metrics, walletValueScore: walletValue });
     const styleLabel = walletStyleLabel(metrics);
+    const persona = walletPersona({
+      ...metrics,
+      profile: cls.primary,
+      labels: cls.labels,
+      reliabilityScore: cls.reliabilityScore,
+      walletValueScore: walletValue,
+      walletTier: tier,
+      walletStyleLabel: styleLabel,
+    });
     profiles.push({
       ...metrics,
       profile: cls.primary,
@@ -288,10 +298,24 @@ function buildProfiles() {
       walletValueScore: walletValue,
       walletTier: tier,
       walletStyleLabel: styleLabel,
+      walletPersona: persona,
+      personaName: persona.personaName,
+      personaCode: persona.personaCode,
+      personaIdentity: persona.identity,
+      personaConfidence: persona.confidence,
+      humanScore: persona.humanScore,
+      botScore: persona.botScore,
+      trackingPool: persona.tracking.pool,
+      walletDecision: persona.decision,
+      decisionGrade: persona.decision.grade,
+      decisionVerdict: persona.decision.verdict,
+      trustScore: persona.decision.trustScore,
+      watchMode: persona.decision.watchMode,
+      watchModeLabel: persona.decision.watchModeLabel,
       emotionWeight: cls.emotionWeight,
       factorScore: cls.score,
       severeNegative: Boolean(cls.severeNegative),
-      analysisSummary: describeWallet({ ...metrics, profile: cls.primary, walletValueScore: walletValue, walletTier: tier, walletStyleLabel: styleLabel, severeNegative: cls.severeNegative }),
+      analysisSummary: describeWallet({ ...metrics, profile: cls.primary, walletValueScore: walletValue, walletTier: tier, walletStyleLabel: styleLabel, walletPersona: persona, severeNegative: cls.severeNegative }),
       profileLabel: profileLabel(cls.primary),
       latestTradeIso: latestTradeTime ? new Date(latestTradeTime).toISOString() : "",
       okxOverview,
