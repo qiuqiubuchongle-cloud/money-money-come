@@ -1,6 +1,6 @@
 <svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Money Money Come 产品流程图</title>
-  <desc id="desc">中文产品流程图，展示多链地址导入、OnchainOS 数据读取、聪明钱评分、分组信号规则、OKX Signal 和 Telegram 提醒。</desc>
+  <desc id="desc">中文产品流程图，展示多链地址导入、OnchainOS 数据读取、聪明钱评分、ETH 雷达、信号分级、生命周期、风险分和 Telegram 提醒。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
       <stop stop-color="#050807"/>
@@ -22,7 +22,7 @@
 
   <g font-family="Inter, PingFang SC, Microsoft YaHei, Arial, sans-serif">
     <text x="104" y="132" fill="#F4FFF8" font-size="54" font-weight="780">Money Money Come</text>
-    <text x="104" y="180" fill="#A8BBB3" font-size="24" font-weight="520">多链聪明钱画像与分组信号引擎</text>
+    <text x="104" y="180" fill="#A8BBB3" font-size="24" font-weight="520">多链聪明钱画像与 ETH Meme 信号解释层</text>
     <g transform="translate(1174 104)">
       <rect width="270" height="48" rx="24" fill="#111B18" stroke="#294138"/>
       <circle cx="30" cy="24" r="8" fill="#36F097"/>
@@ -53,7 +53,7 @@
     <g transform="translate(462 246)">
       <rect width="306" height="438" rx="24" fill="#101715" stroke="#263933"/>
       <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">OnchainOS 数据层</text>
-      <text x="28" y="90" fill="#9FB1AA" font-size="18">读取画像、交易与市场信号</text>
+      <text x="28" y="90" fill="#9FB1AA" font-size="18">画像、Signal、成交量与区块证据</text>
       <g transform="translate(28 128)">
         <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
         <text x="20" y="30" fill="#D8FF7A" font-size="17" font-weight="760">Wallet Profile</text>
@@ -61,8 +61,8 @@
       </g>
       <g transform="translate(28 218)">
         <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
-        <text x="20" y="30" fill="#D8FF7A" font-size="17" font-weight="760">Tracker</text>
-        <text x="20" y="56" fill="#AABCB5" font-size="15">私有地址池买入监控</text>
+        <text x="20" y="30" fill="#D8FF7A" font-size="17" font-weight="760">ETH Tracker</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">私有地址首买共振</text>
       </g>
       <g transform="translate(28 308)">
         <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
@@ -73,19 +73,19 @@
 
     <g transform="translate(820 246)">
       <rect width="306" height="438" rx="24" fill="#101715" stroke="#263933"/>
-      <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">画像评分与分组</text>
-      <text x="28" y="90" fill="#9FB1AA" font-size="18">把地址变成可解释信号源</text>
+      <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">解释与过滤</text>
+      <text x="28" y="90" fill="#9FB1AA" font-size="18">把原始信号变成判断</text>
       <g transform="translate(28 132)">
         <rect width="250" height="52" rx="16" fill="#17231F"/>
-        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">价值分 0-100</text>
+        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">setup / confirm / avoid</text>
       </g>
       <g transform="translate(28 204)">
         <rect width="250" height="52" rx="16" fill="#17231F"/>
-        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">核心 / 观察 / 降权 / 剔除</text>
+        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">生命周期 / 风险分</text>
       </g>
       <g transform="translate(28 276)">
         <rect width="250" height="52" rx="16" fill="#17231F"/>
-        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">热点组 / 百倍组 / 盈利组</text>
+        <text x="20" y="33" fill="#DFF7EA" font-size="17" font-weight="700">钱包集群 / 同买关系</text>
       </g>
       <g transform="translate(28 352)">
         <rect width="176" height="38" rx="19" fill="#20332B" stroke="#345A48"/>
@@ -95,22 +95,22 @@
 
     <g transform="translate(1178 246)">
       <rect width="306" height="438" rx="24" fill="#101715" stroke="#263933"/>
-      <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">分组信号提醒</text>
+      <text x="28" y="54" fill="#F4FFF8" font-size="27" font-weight="780">克制提醒与复盘</text>
       <text x="28" y="90" fill="#9FB1AA" font-size="18">规则可自定义，TG 可读</text>
       <g transform="translate(28 128)">
         <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
-        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">私有同组共振</text>
-        <text x="20" y="56" fill="#AABCB5" font-size="15">2 个或 3 个钱包由你配置</text>
+        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">Telegram 关键卡片</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">名称 / 合约 / 市值 / 价格</text>
       </g>
       <g transform="translate(28 218)">
         <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
-        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">OKX 官方 Signal</text>
-        <text x="20" y="56" fill="#AABCB5" font-size="15">官方参数预过滤 + 本地风控</text>
+        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">信号日志 Journal</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">按分级 / 来源组合复盘</text>
       </g>
       <g transform="translate(28 308)">
         <rect width="250" height="70" rx="18" fill="#151F1C" stroke="#263A34"/>
-        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">Telegram 卡片</text>
-        <text x="20" y="56" fill="#AABCB5" font-size="15">地址画像 / 信号等级 / 风险提示</text>
+        <text x="20" y="30" fill="#36F097" font-size="17" font-weight="760">可选区块证据</text>
+        <text x="20" y="56" fill="#AABCB5" font-size="15">ETH_RPC_URL 追踪交易区块</text>
       </g>
     </g>
   </g>
@@ -125,6 +125,6 @@
   <g transform="translate(104 738)" font-family="Inter, PingFang SC, Microsoft YaHei, Arial, sans-serif">
     <rect width="1380" height="68" rx="22" fill="#0F1715" stroke="#24372F"/>
     <text x="28" y="43" fill="#DDF7EA" font-size="20" font-weight="760">核心原则：</text>
-    <text x="126" y="43" fill="#9FB1AA" font-size="19">官方数据负责“看见链上发生了什么”，Money Money Come 负责“筛掉噪音，只把值得复盘的信号送到你面前”。</text>
+    <text x="126" y="43" fill="#9FB1AA" font-size="19">官方数据负责“看见链上发生了什么”，Money Money Come 负责“分级、降噪、解释，只把值得复盘的信号送到你面前”。</text>
   </g>
 </svg>

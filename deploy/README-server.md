@@ -4,12 +4,16 @@
 
 ## 监控通道
 
-当前监控器有两条主要信号通道：
+当前有两类监控器：
+
+- BSC 分组监控：基于 `safeSignalPool` 和同组集中买入规则
+- ETH Meme 雷达：合并 OKX Signal、ETH hot-token 放量、私有 ETH 观察地址首买共振
 
 | 通道 | 作用 | 默认状态 |
 | --- | --- | --- |
 | 私有聪明钱地址池 | 监控你自己筛选出的 `safeSignalPool`，当同组核心地址集中买入时提醒 | 开启 |
 | OKX 官方 Signal | 读取 OKX 聚合聪明钱 / KOL / 鲸鱼 Signal，原样转发到 TG，并追加备注 | 开启 |
+| ETH Meme 雷达 | 给 ETH meme 信号做分级、生命周期、风险分和钱包集群解释 | 可独立开启 |
 
 GMGN、Four.meme、Binance 是可选增强源。首次部署建议先保持关闭，等私有地址池和 OKX 官方 Signal 转发跑稳定后再接入。
 
@@ -102,6 +106,42 @@ OKX_SIGNAL_MIN_AMOUNT_USD=
 OKX_SIGNAL_MIN_LIQUIDITY_USD=
 OKX_SIGNAL_MAX_MARKET_CAP_USD=
 OKX_SIGNAL_MAX_SOLD_RATIO_PERCENT=100
+```
+
+ETH 雷达常用配置：
+
+```bash
+ETH_OKX_SIGNAL_ENABLED=1
+ETH_HOT_TOKENS_ENABLED=1
+ETH_PRIVATE_TRACKER_ENABLED=1
+ETH_PRIVATE_ADDRESSES_PATH=config/eth-watch-addresses.txt
+ETH_PRIVATE_MIN_WALLETS=2
+ETH_PRIVATE_WINDOW_MS=300000
+ETH_MEME_MIN_COMPOSITE_SCORE=5
+ETH_MEME_MAX_RISK_SCORE=6
+ETH_MEME_ALERT_LATE_SIGNALS=0
+ETH_TG_INCLUDE_DIAGNOSTICS=0
+ETH_RPC_URL=
+ETH_BLOCK_TRACKING_ENABLED=0
+```
+
+ETH 雷达会把信号分成：
+
+| 分级 | 含义 | 默认处理 |
+| --- | --- | --- |
+| `setup` | 刚出现，适合观察 | 可推 |
+| `confirm` | 私有地址池、OKX Signal、成交量出现强确认 | 优先推 |
+| `late` | 市值或涨幅偏后排 | 默认不推 |
+| `avoid` | 风险分过高 | 不推 |
+
+如果你只想要“我给的 ETH 地址里，两个地址 5 分钟内买同一个 token 才提醒”，配置为：
+
+```bash
+ETH_OKX_SIGNAL_ENABLED=0
+ETH_HOT_TOKENS_ENABLED=0
+ETH_PRIVATE_TRACKER_ENABLED=1
+ETH_PRIVATE_MIN_WALLETS=2
+ETH_PRIVATE_WINDOW_MS=300000
 ```
 
 ## 1. 拉取仓库
@@ -202,6 +242,49 @@ tail -f logs/server-monitor.err.log
 sudo systemctl stop money-money-come
 ```
 
+## 6. ETH 雷达常驻运行
+
+准备 ETH 观察地址：
+
+```bash
+nano config/eth-watch-addresses.txt
+```
+
+每行一个 ETH 地址。然后前台试跑：
+
+```bash
+npm run test:eth-meme
+npm run monitor:eth-meme
+```
+
+安装 systemd：
+
+```bash
+sudo cp deploy/money-money-come-eth.service /etc/systemd/system/money-money-come-eth.service
+sudo systemctl daemon-reload
+sudo systemctl enable money-money-come-eth
+sudo systemctl restart money-money-come-eth
+```
+
+查看状态和日志：
+
+```bash
+sudo systemctl status money-money-come-eth
+tail -f logs/eth-meme-radar.log
+tail -f logs/eth-meme-radar.err.log
+```
+
+复盘已发送信号：
+
+```bash
+npm run review:eth-signals
+```
+
+输出文件：
+
+- `data/eth_meme_signal_journal.ndjson`：逐条信号日志
+- `data/eth_meme_signal_review.json`：按分级、生命周期、来源组合聚合的复盘结果
+
 ## Telegram 信号格式
 
 私有地址池触发后会发送类似这种 HTML 消息：
@@ -239,6 +322,23 @@ OKX 官方 Signal 是单独的转发卡：
 • 市值：$420.0K
 
 📝 备注：OKX 官方 Signal 原样转发；这条不代表你的私有聪明钱地址池已经同组共振。
+```
+
+ETH 雷达卡片更短：
+
+```text
+🚨 ETH Meme 雷达
+
+🪙 名称：TOKEN ｜ Token Name
+🔗 合约：0x...
+📌 判断：确认 ｜ 早期起量
+📊 市值：$320.0K
+🧠 聪明钱买入金额：$12.3K
+💵 价格：0.00000123
+👥 持有人：142
+📝 备注：私有地址池与 OKX Signal 同时出现，优先复核。
+
+⚠️ 仅供观察，不构成买入建议。
 ```
 
 ## 为什么没有 Telegram 信号

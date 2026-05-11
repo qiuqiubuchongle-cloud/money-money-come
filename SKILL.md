@@ -1,11 +1,13 @@
 ---
 name: money-money-come
-description: Use this skill when the user wants to analyze a batch of BSC or Solana smart-money addresses, classify wallets by PnL and trading style, generate concise wallet reports, build safe signal pools, export curated wallets, and alert when multiple wallets in the same positive group concentrate buys on the same meme token. Default to analysis and alerts only; do not enable trading execution unless the user explicitly asks and separate safety checks are in place.
+description: Use this skill when the user wants to analyze BSC or Solana smart-money addresses, classify wallets by PnL and trading style, build safe signal pools, or run ETH meme signal monitoring that merges OKX Signal, hot-token volume, private watch-wallet buys, signal grading, lifecycle awareness, risk scoring, wallet clusters, and Telegram alerts. Default to analysis and alerts only; do not enable trading execution unless the user explicitly asks and separate safety checks are in place.
 ---
 
 # Money Money Come
 
-This skill is for building and operating a BSC or Solana smart-money analysis workflow around user-supplied wallet lists.
+This skill is for building and operating a BSC / Solana smart-money analysis workflow and an ETH meme signal interpretation workflow around user-supplied wallet lists.
+
+It should behave like a signal interpretation layer, not a raw signal relay. GMGN-style feeds are already strong at speed; this skill should be stronger at wallet quality, group interpretation, noise reduction, and concise explanation.
 
 ## Use This Skill For
 
@@ -24,6 +26,9 @@ This skill is for building and operating a BSC or Solana smart-money analysis wo
 - Running a useful baseline workflow with OKX data only, while keeping GMGN / Binance as optional enhancers
 - Running Solana address analysis with `SMART_WALLET_CHAIN=solana` or the `sol:*` npm scripts
 - Configuring private grouped buy rules and OKX official Signal alerts for Telegram
+- Turning raw wallet activity into a small set of explainable, high-signal alerts
+- Running ETH meme radar with OKX Signal + hot-token volume + private watch-wallet first buys
+- Reviewing emitted ETH signal journal rows to learn which source combos and stages are noisy
 
 ## Safety Defaults
 
@@ -48,6 +53,8 @@ This skill is for building and operating a BSC or Solana smart-money analysis wo
 - Group report and safe signal pool: `scripts/report_smart_wallet_groups.mjs`
 - Shared helpers and rules: `scripts/lib_smart_wallets.mjs`
 - Existing monitor pipeline: `scripts/monitor_bsc_signals.mjs`
+- ETH meme radar: `scripts/monitor_eth_meme_radar.mjs`
+- ETH signal journal review: `scripts/review_eth_signal_journal.mjs`
 - Signal rule template: `config/signal-rules.example.json`
 - Setup checklist: `references/setup-checklist.md`
 
@@ -184,6 +191,14 @@ TELEGRAM_PROXY=...
 
 The monitor should only send grouped alerts from the **safe signal pool**.
 
+The best version of this skill is not "more alerts"; it is:
+
+- fewer false positives
+- clearer stage labels
+- cleaner wallet-group reasoning
+- a short explanation of why the signal matters
+- a memory of what kinds of grouped buys actually worked before
+
 Custom signal rules:
 
 ```bash
@@ -218,6 +233,85 @@ OKX_OFFICIAL_APPLY_LOCAL_FILTERS=0
 ```
 
 Important: private grouped alerts and OKX official Signal are separate channels. Private alerts use the user's safe wallet pool and same-group concentration rules. Observation alerts can include the observe pool and should be labeled clearly as observation, not a formal entry. OKX official Signal should be forwarded as-is with an added remark, unless the user explicitly enables local filtering. Do not treat OKX official Signal as proof that the user's private smart-wallet group has converged.
+
+## ETH Meme Radar
+
+Use `npm run monitor:eth-meme` when the user asks to monitor ETH meme tokens, private ETH wallet buys, OKX Signal on Ethereum, sudden ETH token volume spikes, or first-buy alerts from a custom ETH address list.
+
+Inputs:
+
+- OKX Signal: `ETH_OKX_SIGNAL_ENABLED=1`
+- Hot token / price-info volume spikes: `ETH_HOT_TOKENS_ENABLED=1`
+- Private watch wallets: `ETH_PRIVATE_TRACKER_ENABLED=1` and `ETH_PRIVATE_ADDRESSES_PATH=config/eth-watch-addresses.txt`
+
+Core rules:
+
+- Private watch-wallet alerts are first-buy based: one wallet buying the same token repeatedly should not keep firing.
+- Default private threshold is `ETH_PRIVATE_MIN_WALLETS=2` within `ETH_PRIVATE_WINDOW_MS=300000`.
+- Events are merged per token across OKX Signal, volume spike, and private watch-wallet buys.
+- Every merged event gets:
+  - `signalGrade`: `setup`, `confirm`, `late`, or `avoid`
+  - `lifecycleStage`: early, confirming, late, overheated, thin, or unknown
+  - `riskScore` plus short risk reasons
+  - wallet cluster stats when private wallets co-buy repeatedly
+- `avoid` and most `late` events should not be sent to Telegram by default.
+- Telegram cards should stay compact: name, contract, grade/stage, market cap, smart-money amount, price, holders, one-line remark.
+
+Useful environment variables:
+
+```bash
+ETH_MEME_MIN_COMPOSITE_SCORE=5
+ETH_MEME_MAX_RISK_SCORE=6
+ETH_MEME_ALERT_LATE_SIGNALS=0
+ETH_TG_INCLUDE_DIAGNOSTICS=0
+ETH_MEME_MIN_VOLUME_5M_USD=10000
+ETH_MEME_MIN_TXS_5M=20
+ETH_MEME_MAX_MARKET_CAP_USD=20000000
+ETH_MEME_MIN_LIQUIDITY_USD=10000
+ETH_MEME_MIN_HOLDERS=30
+ETH_MEME_MAX_TOP10_HOLDER_PERCENT=45
+ETH_LIFECYCLE_EARLY_MAX_MARKET_CAP_USD=500000
+ETH_LIFECYCLE_LATE_MIN_MARKET_CAP_USD=5000000
+ETH_RPC_URL=
+ETH_BLOCK_TRACKING_ENABLED=0
+```
+
+If `ETH_RPC_URL` is configured, the radar can attach block-level evidence for private watch-wallet buy transactions. Keep this optional; the monitor must still run without RPC.
+
+For replay:
+
+```bash
+npm run test:eth-meme
+npm run review:eth-signals
+```
+
+`npm run test:eth-meme` runs an offline self-test for grading and Telegram formatting. `npm run review:eth-signals` reads `data/eth_meme_signal_journal.ndjson` and summarizes emitted alerts by grade, lifecycle stage, and source combo. Treat this as the first step toward hit-rate feedback; it does not yet calculate future price performance.
+
+## Product Direction
+
+When improving this skill, prioritize these upgrade paths:
+
+1. **Signal grading**
+   - Add stages such as `setup`, `confirm`, `late`, and `avoid`
+   - A buy signal from two wallets is not equally useful at all market phases
+
+2. **Wallet clusters**
+   - Track wallets as groups with recurring co-buy behavior
+   - A wallet that repeatedly co-buys with other trusted wallets matters more than a single isolated wallet
+
+3. **Token lifecycle awareness**
+   - Early launch, post-migration, spike, distribution, and decay should not use the same rule
+
+4. **Historical hit-rate learning**
+   - Which group worked
+   - Which time window worked
+   - Which market cap band worked
+   - Which signals were just noise
+
+5. **Short explanation layer**
+   - Keep Telegram cards compact
+   - Add one line that explains why the alert exists
+   - Avoid flooding the user with raw fields
 
 GMGN / Binance data sources are optional enhancers. The baseline workflow should still be useful with:
 

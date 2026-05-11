@@ -2,7 +2,7 @@
   "name": "money-money-come",
   "version": "0.1.0",
   "private": true,
-  "description": "BSC and Solana smart money wallet profiling, grouping, curated export, and grouped buy alerts.",
+  "description": "BSC/Solana smart-money profiling plus ETH meme signal grading, lifecycle risk scoring, wallet clusters, and Telegram alerts.",
   "scripts": {
     "import-wallets": "node scripts/import_smart_wallets.mjs",
     "profiles": "node scripts/build_smart_wallet_profiles.mjs",
@@ -17,6 +17,9 @@
     "sol:wallet-groups": "SMART_WALLET_CHAIN=solana node scripts/report_smart_wallet_groups.mjs",
     "sol:export-curated": "SMART_WALLET_CHAIN=solana node scripts/export_curated_wallets.mjs",
     "monitor": "node scripts/monitor_bsc_signals.mjs",
+    "monitor:eth-meme": "node scripts/monitor_eth_meme_radar.mjs",
+    "review:eth-signals": "node scripts/review_eth_signal_journal.mjs",
+    "test:eth-meme": "ETH_MEME_SELF_TEST=1 node scripts/monitor_eth_meme_radar.mjs",
     "telegram-bridge": "node scripts/telegram_bridge.mjs"
   }
 }

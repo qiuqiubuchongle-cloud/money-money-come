@@ -1,6 +1,6 @@
 <svg width="1280" height="760" viewBox="0 0 1280 760" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Telegram 钱包画像示意卡</title>
-  <desc id="desc">中文 Telegram 风格钱包画像示意图，展示 Money Money Come 的地址分析结果和信号卡片。</desc>
+  <title id="title">Telegram 钱包画像与 ETH 雷达示意卡</title>
+  <desc id="desc">中文 Telegram 风格示意图，展示 Money Money Come 的地址分析结果和 ETH Meme 雷达信号卡片。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="760" gradientUnits="userSpaceOnUse">
       <stop stop-color="#050807"/>
@@ -13,8 +13,8 @@
   <rect width="1280" height="760" fill="url(#bg)"/>
 
   <g font-family="Inter, PingFang SC, Microsoft YaHei, Arial, sans-serif">
-    <text x="72" y="92" fill="#F4FFF8" font-size="42" font-weight="780">Telegram 钱包画像示意</text>
-    <text x="72" y="132" fill="#9FB1AA" font-size="20">更少数据堆叠，更清楚的结论、标签和跟踪建议。</text>
+    <text x="72" y="92" fill="#F4FFF8" font-size="42" font-weight="780">Telegram 信号卡片示意</text>
+    <text x="72" y="132" fill="#9FB1AA" font-size="20">更少字段，更清楚的判断、阶段和风险提示。</text>
 
     <g filter="url(#shadow)" transform="translate(72 176)">
       <rect width="520" height="462" rx="28" fill="#0F1715" stroke="#263A32"/>
@@ -55,31 +55,31 @@
     <g filter="url(#shadow)" transform="translate(688 176)">
       <rect width="520" height="462" rx="28" fill="#0F1715" stroke="#263A32"/>
       <rect x="28" y="28" width="464" height="58" rx="18" fill="#151F1B"/>
-      <text x="52" y="65" fill="#D8FF7A" font-size="24" font-weight="800">🚨 分组信号提醒</text>
+      <text x="52" y="65" fill="#D8FF7A" font-size="24" font-weight="800">🚨 ETH Meme 雷达</text>
 
-      <text x="36" y="130" fill="#F4FFF8" font-size="28" font-weight="780">热点组同组共振</text>
-      <text x="36" y="164" fill="#9FB1AA" font-size="18">private + OKX Signal ｜ BSC</text>
+      <text x="36" y="130" fill="#F4FFF8" font-size="28" font-weight="780">确认｜早期起量</text>
+      <text x="36" y="164" fill="#9FB1AA" font-size="18">private + OKX Signal ｜ Ethereum</text>
 
       <g transform="translate(36 200)">
         <text x="0" y="0" fill="#AFC2BA" font-size="18" font-weight="700">市场数据</text>
-        <text x="0" y="36" fill="#E4F3EC" font-size="20">市值：$320.0K ｜ 流动性：$18.5K</text>
-        <text x="0" y="66" fill="#E4F3EC" font-size="20">持有人：142 ｜ Top10：31%</text>
+        <text x="0" y="36" fill="#E4F3EC" font-size="20">名称：TOKEN ｜ 合约：0x...8888</text>
+        <text x="0" y="66" fill="#E4F3EC" font-size="20">市值：$320.0K ｜ 价格：0.00000123</text>
       </g>
 
       <g transform="translate(36 304)">
         <rect width="208" height="58" rx="18" fill="#16231E"/>
-        <text x="20" y="25" fill="#9FB1AA" font-size="14">私有地址池</text>
-        <text x="20" y="48" fill="#36F097" font-size="22" font-weight="820">2 个核心钱包</text>
+        <text x="20" y="25" fill="#9FB1AA" font-size="14">聪明钱金额</text>
+        <text x="20" y="48" fill="#36F097" font-size="22" font-weight="820">$12.3K</text>
       </g>
       <g transform="translate(260 304)">
         <rect width="208" height="58" rx="18" fill="#16231E"/>
-        <text x="20" y="25" fill="#9FB1AA" font-size="14">OKX Signal</text>
-        <text x="20" y="48" fill="#36F097" font-size="22" font-weight="820">8 个触发钱包</text>
+        <text x="20" y="25" fill="#9FB1AA" font-size="14">持有人</text>
+        <text x="20" y="48" fill="#36F097" font-size="22" font-weight="820">142</text>
       </g>
 
       <g transform="translate(36 396)">
-        <rect width="432" height="38" rx="19" fill="#30261A" stroke="#5C4730"/>
-        <text x="22" y="25" fill="#FFE7BE" font-size="16" font-weight="760">提示：仅做链上提醒，不代表实盘建议</text>
+        <rect width="432" height="38" rx="19" fill="#193026" stroke="#315B47"/>
+        <text x="22" y="25" fill="#CFF8DF" font-size="16" font-weight="760">备注：私有地址池与 OKX Signal 同时出现</text>
       </g>
     </g>
   </g>
