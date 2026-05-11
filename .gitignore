@@ -1,6 +1,7 @@
 .env
 deploy/server.env
 config/signal-rules.json
+config/eth-watch-addresses.txt
 data/
 logs/
 *.ndjson

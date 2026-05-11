@@ -1,0 +1,154 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Wallet Persona 与 Wallet Decision 地址判断框架</title>
+  <desc id="desc">中文信息图，展示聪明钱地址如何从链上证据生成钱包人设、信任分、A/B/C/D筛选等级和跟踪策略。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#050706"/>
+      <stop offset="0.55" stop-color="#09100D"/>
+      <stop offset="1" stop-color="#111816"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="160" y1="450" x2="1440" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E5FF66"/>
+      <stop offset="0.45" stop-color="#21E68A"/>
+      <stop offset="1" stop-color="#67C7FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-14%" y="-18%" width="128%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity="0.36"/>
+    </filter>
+    <style>
+      .font { font-family: Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif; }
+      .title { fill: #F4FFF8; font-size: 48px; font-weight: 820; letter-spacing: 0; }
+      .sub { fill: #A8BAB2; font-size: 22px; font-weight: 540; letter-spacing: 0; }
+      .card-title { fill: #F4FFF8; font-size: 26px; font-weight: 800; letter-spacing: 0; }
+      .card-sub { fill: #A8BAB2; font-size: 16px; font-weight: 540; letter-spacing: 0; }
+      .body { fill: #E6FFF0; font-size: 17px; font-weight: 700; letter-spacing: 0; }
+      .small { fill: #AABCB5; font-size: 15px; font-weight: 520; letter-spacing: 0; }
+      .muted { fill: #71847C; font-size: 14px; font-weight: 520; letter-spacing: 0; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect x="54" y="46" width="1492" height="808" rx="34" fill="#0A0F0D" stroke="#1C2A25"/>
+
+  <g class="font">
+    <text x="104" y="124" class="title">地址不是备注名，是可复盘的人设资产</text>
+    <text x="104" y="170" class="sub">Money Money Come 把单个钱包拆成证据、画像、决策和跟踪策略。</text>
+  </g>
+
+  <g class="font" filter="url(#shadow)">
+    <g transform="translate(104 232)">
+      <rect width="344" height="470" rx="24" fill="#101715" stroke="#263832"/>
+      <text x="28" y="54" class="card-title">1. 链上证据</text>
+      <text x="28" y="84" class="card-sub">先看事实，不靠感觉贴标签</text>
+      <g transform="translate(28 120)">
+        <rect width="288" height="52" rx="16" fill="#17221F"/>
+        <text x="18" y="33" class="body">已实现收益 / 胜率</text>
+      </g>
+      <g transform="translate(28 190)">
+        <rect width="288" height="52" rx="16" fill="#17221F"/>
+        <text x="18" y="33" class="body">低市值买入占比</text>
+      </g>
+      <g transform="translate(28 260)">
+        <rect width="288" height="52" rx="16" fill="#17221F"/>
+        <text x="18" y="33" class="body">最近活跃 / 交易节奏</text>
+      </g>
+      <g transform="translate(28 330)">
+        <rect width="288" height="52" rx="16" fill="#17221F"/>
+        <text x="18" y="33" class="body">重复买入 / 退出纪律</text>
+      </g>
+      <text x="28" y="430" class="muted">样本太薄、长期休眠、高频噪音都会降权。</text>
+    </g>
+
+    <g transform="translate(488 232)">
+      <rect width="344" height="470" rx="24" fill="#101715" stroke="#2A4639"/>
+      <text x="28" y="54" class="card-title">2. Wallet Persona</text>
+      <text x="28" y="84" class="card-sub">让地址变成能读懂的链上人设</text>
+      <g transform="translate(28 120)">
+        <rect width="132" height="42" rx="21" fill="#1B3328" stroke="#365E49"/>
+        <text x="24" y="27" class="body">叙事猎人</text>
+      </g>
+      <g transform="translate(180 120)">
+        <rect width="132" height="42" rx="21" fill="#17241F" stroke="#304139"/>
+        <text x="24" y="27" class="body">稳健盈利</text>
+      </g>
+      <g transform="translate(28 184)">
+        <rect width="132" height="42" rx="21" fill="#17241F" stroke="#304139"/>
+        <text x="24" y="27" class="body">信仰加仓</text>
+      </g>
+      <g transform="translate(180 184)">
+        <rect width="132" height="42" rx="21" fill="#17241F" stroke="#304139"/>
+        <text x="24" y="27" class="body">热点切换</text>
+      </g>
+      <g transform="translate(28 248)">
+        <rect width="132" height="42" rx="21" fill="#17241F" stroke="#304139"/>
+        <text x="24" y="27" class="body">链上打点</text>
+      </g>
+      <g transform="translate(180 248)">
+        <rect width="132" height="42" rx="21" fill="#17241F" stroke="#304139"/>
+        <text x="24" y="27" class="body">后排冲锋</text>
+      </g>
+      <text x="28" y="354" fill="#DFFF70" font-size="17" font-weight="780">能力雷达</text>
+      <text x="28" y="386" class="small">发现力 / 执行力 / 退出纪律</text>
+      <text x="28" y="412" class="small">真人感 / 机器人感 / 可跟随性</text>
+    </g>
+
+    <g transform="translate(872 232)">
+      <rect width="344" height="470" rx="24" fill="#101715" stroke="#2A4639"/>
+      <text x="28" y="54" class="card-title">3. Wallet Decision</text>
+      <text x="28" y="84" class="card-sub">人设必须落到可执行筛选</text>
+      <g transform="translate(28 118)">
+        <rect width="288" height="58" rx="17" fill="#1B3328"/>
+        <text x="18" y="35" fill="#E9FFF1" font-size="18" font-weight="820">A 重点跟踪</text>
+      </g>
+      <g transform="translate(28 194)">
+        <rect width="288" height="58" rx="17" fill="#17231F"/>
+        <text x="18" y="35" class="body">B 观察验证</text>
+      </g>
+      <g transform="translate(28 270)">
+        <rect width="288" height="58" rx="17" fill="#17231F"/>
+        <text x="18" y="35" class="body">C 只看题材</text>
+      </g>
+      <g transform="translate(28 346)">
+        <rect width="288" height="58" rx="17" fill="#17231F"/>
+        <text x="18" y="35" class="body">D 排除留档</text>
+      </g>
+      <text x="28" y="438" class="muted">输出 trustScore、理由、风险、失效条件。</text>
+    </g>
+
+    <g transform="translate(1256 232)">
+      <rect width="240" height="470" rx="24" fill="#101715" stroke="#263832"/>
+      <text x="28" y="54" class="card-title">4. 跟踪用途</text>
+      <text x="28" y="84" class="card-sub">不同地址不同用法</text>
+      <g transform="translate(28 124)">
+        <text x="0" y="0" fill="#DFFF70" font-size="17" font-weight="780">发现源</text>
+        <text x="0" y="30" class="small">更早看见新题材</text>
+      </g>
+      <g transform="translate(28 194)">
+        <text x="0" y="0" fill="#DFFF70" font-size="17" font-weight="780">确认源</text>
+        <text x="0" y="30" class="small">同组共振再提醒</text>
+      </g>
+      <g transform="translate(28 264)">
+        <text x="0" y="0" fill="#DFFF70" font-size="17" font-weight="780">观察源</text>
+        <text x="0" y="30" class="small">有亮点但要验证</text>
+      </g>
+      <g transform="translate(28 334)">
+        <text x="0" y="0" fill="#DFFF70" font-size="17" font-weight="780">噪音源</text>
+        <text x="0" y="30" class="small">排除或仅作背景</text>
+      </g>
+      <text x="28" y="428" class="muted">信号只是把筛选结果送到 TG。</text>
+    </g>
+  </g>
+
+  <path d="M456 466H480" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M840 466H864" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M1224 466H1248" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M476 456L492 466L476 476V456Z" fill="#21E68A"/>
+  <path d="M860 456L876 466L860 476V456Z" fill="#21E68A"/>
+  <path d="M1244 456L1260 466L1244 476V456Z" fill="#21E68A"/>
+
+  <g class="font" transform="translate(104 746)">
+    <rect width="1392" height="70" rx="22" fill="#0F1715" stroke="#24372F"/>
+    <text x="28" y="44" fill="#E8FFF1" font-size="21" font-weight="800">一句话：</text>
+    <text x="112" y="44" fill="#A8BAB2" font-size="19" font-weight="560">先把地址变成“可解释的人”，再决定它能不能进你的观察池。</text>
+  </g>
+</svg>
