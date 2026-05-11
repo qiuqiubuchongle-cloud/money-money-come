@@ -2,7 +2,7 @@
 
 > 多链聪明钱画像与分组信号引擎。把你收藏的聪明钱地址，整理成可评分、可分组、可监控、可推送的个人链上研究系统。
 
-`Money Money Come` 是一个面向 meme 扫链用户、链上研究员和 Agent 工作流的公开 Skill。它基于 **OnchainOS / OKX 链上数据能力**，支持 BSC 与 Solana 聪明钱地址画像、质量分层、分组管理、观察池导出，也支持 ETH meme 雷达监控：OKX 官方 Signal、hot-token 放量、私有观察地址池首买共振可以合并成一张更克制的 Telegram 卡片。
+`Money Money Come` 是一个面向 meme 扫链用户、链上研究员和 Agent 工作流的公开 Skill。它基于 **OnchainOS / OKX 链上数据能力**，支持 BSC 与 Solana 聪明钱地址画像、质量分层、分组管理、观察池导出，也支持 ETH meme 雷达监控：OKX 官方 Signal、hot-token 放量、私有观察地址池首买共振、ETH Gas Radar 可以合并成一张更克制的 Telegram 卡片。
 
 它现在更像一层 **信号解释器**，不是另一个原始信号搬运工。
 
@@ -50,7 +50,7 @@
   -> 自动分组与筛选
   -> 生成 safeSignalPool
   -> 按你的规则监控同组集中买入
-  -> ETH 雷达合并 OKX Signal / 放量 / 私有地址首买
+  -> ETH 雷达合并 OKX Signal / 放量 / 私有地址首买 / Gas 异动路由买入
   -> 计算信号分级、生命周期、风险分和钱包集群关系
   -> 推送 Telegram 可读信号卡
 ```
@@ -199,13 +199,14 @@ npm run export-curated
 
 ### 6. ETH Meme 雷达
 
-ETH 雷达用于更轻、更快地盯 ETH 链上的 meme 机会。它不要求你先跑完整 BSC/SOL 画像流程，可以直接读取三类输入：
+ETH 雷达用于更轻、更快地盯 ETH 链上的 meme 机会。它不要求你先跑完整 BSC/SOL 画像流程，可以直接读取四类输入：
 
 | 来源 | 说明 | 触发价值 |
 | --- | --- | --- |
 | OKX Signal | OnchainOS 聚合的 Smart Money / KOL / Whale 信号 | 判断是否有外部聪明钱热度 |
 | Hot Tokens / price-info | ETH 热门 token 与价格、成交、持有人数据 | 判断是否突然放量 |
 | 私有观察地址池 | 你给定的 ETH 钱包首次买入同一 token | 判断是否有自己的地址池共振 |
+| ETH Gas Radar | 主网 gas 升高时扫描最近区块的 DEX 路由交易 | 判断链上资金正在抢哪些非基础资产 |
 
 雷达不会把所有 raw signal 原样扔给你，而是先做四层解释：
 
@@ -246,7 +247,7 @@ npm run monitor:eth-meme
 npm run review:eth-signals
 ```
 
-如果配置 `ETH_RPC_URL`，雷达会额外记录私有观察地址首买所在区块，方便把 Telegram 信号和区块浏览器证据对上。
+如果配置 `ETH_RPC_URL`，雷达会额外记录私有观察地址首买所在区块，并启用 Gas Radar 扫描最近 ETH 区块，方便把 Telegram 信号和区块浏览器证据对上。
 
 ## 自定义配置：你决定什么叫信号
 
@@ -339,39 +340,18 @@ PRIVATE_WINDOW_MS=120000
 PRIVATE_SAME_GROUP_REQUIRED=1
 ```
 
-## 这次升级后的判断框架
+## 实用监控方向
 
-这次迭代参考了 5 类材料的产品思路：Smart Money 标签体系、钱包跟踪产品、OKX OnchainOS Signal、以太坊区块浏览器证据，以及 meme 市场里常见的操纵/噪音模式。落到代码里是五个方向：
+这个 Skill 接下来最重要的不是继续堆概念，而是把 ETH 链上“现在大家正在买什么”尽量早地抓出来。
 
-1. **Signal grading**
-   - `setup`：刚出现，适合观察
-   - `confirm`：私有地址池、OKX Signal、成交量里至少有强确认
-   - `late`：市值或涨幅偏后排，只适合复盘
-   - `avoid`：风险分过高，默认不推
+新增的 ETH Gas Radar 会在主网 gas 明显升高时，扫描最近区块里的 DEX 路由交易，从 ERC20 `Transfer` 日志里提取用户实际收到的非基础资产 token。它会统计同一 token 在短窗口内出现了多少买家、多少笔路由交易，再合并 OKX Signal、热门 token 放量和你的私有观察地址池，最后只把更像“正在被抢”的 meme 候选推到 Telegram。
 
-2. **Wallet cluster graph**
-   - 私有地址池同一 token 同窗口买入时，会记录两两钱包关系
-   - 以后同一组钱包再次共振，权重更高
+这条线的核心目标很简单：
 
-3. **Token lifecycle awareness**
-   - 低市值起量、确认放量、过热拉升、后排市值、薄流动性使用不同判断
-   - 不再把“2 个钱包买了”当成永远同等价值
-
-4. **Manipulation / risk score**
-   - 流动性薄、持有人少、Top10 集中、触发钱包卖出比例高、急拉但成交笔数不足都会加风险分
-   - 风险分超过阈值默认不推
-
-5. **Replay feedback**
-   - ETH 雷达会把每条已发送信号写入 `data/eth_meme_signal_journal.ndjson`
-   - `npm run review:eth-signals` 可以按来源组合、分级、生命周期做复盘
-
-## 接下来还值得升级的方向
-
-- 给 journal 追加 15m / 1h / 6h 后续价格回放，真正统计命中率
-- 接入更强的地址标签和地址关联度，识别同一实体或同一资金团
-- 把 token holder 变化、DEX 路由、MEV 痕迹纳入风险分
-- 做每日简版 alpha brief，而不是只靠实时 TG
-- 允许用户按钱包组配置不同生命周期阈值
+- gas 突然贵了，说明链上有人在抢交易
+- 如果很多 DEX 路由交易都指向同一个新 token，它比普通热榜更值得看
+- 如果这个 token 同时被 OKX Signal、hot-token 或你的观察地址池命中，就提高优先级
+- TG 只发关键字段，不把你淹没在链上原始日志里
 
 ## OKX 官方 Signal 原样转发
 

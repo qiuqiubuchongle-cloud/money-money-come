@@ -97,4 +97,4 @@ By default, monitoring should be able to run with:
 - generated profile/group files
 - Telegram config if notifications are needed
 
-GMGN and Binance should be treated as optional enhancer sources, not required dependencies.
+External market feeds should be treated as optional enhancer sources, not required dependencies.

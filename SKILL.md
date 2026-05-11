@@ -243,12 +243,14 @@ Inputs:
 - OKX Signal: `ETH_OKX_SIGNAL_ENABLED=1`
 - Hot token / price-info volume spikes: `ETH_HOT_TOKENS_ENABLED=1`
 - Private watch wallets: `ETH_PRIVATE_TRACKER_ENABLED=1` and `ETH_PRIVATE_ADDRESSES_PATH=config/eth-watch-addresses.txt`
+- ETH Gas Radar: `ETH_RPC_URL=...` and `ETH_GAS_RADAR_ENABLED=1`
 
 Core rules:
 
 - Private watch-wallet alerts are first-buy based: one wallet buying the same token repeatedly should not keep firing.
 - Default private threshold is `ETH_PRIVATE_MIN_WALLETS=2` within `ETH_PRIVATE_WINDOW_MS=300000`.
-- Events are merged per token across OKX Signal, volume spike, and private watch-wallet buys.
+- Gas Radar only scans recent ETH blocks when gas is elevated or spiking, then counts DEX router buys where users receive a non-base ERC20 token.
+- Events are merged per token across OKX Signal, volume spike, private watch-wallet buys, and Gas Radar.
 - Every merged event gets:
   - `signalGrade`: `setup`, `confirm`, `late`, or `avoid`
   - `lifecycleStage`: early, confirming, late, overheated, thin, or unknown
@@ -274,9 +276,16 @@ ETH_LIFECYCLE_EARLY_MAX_MARKET_CAP_USD=500000
 ETH_LIFECYCLE_LATE_MIN_MARKET_CAP_USD=5000000
 ETH_RPC_URL=
 ETH_BLOCK_TRACKING_ENABLED=0
+ETH_GAS_RADAR_ENABLED=1
+ETH_GAS_RADAR_MIN_GWEI=20
+ETH_GAS_RADAR_SPIKE_MULTIPLIER=1.6
+ETH_GAS_RADAR_BLOCKS=3
+ETH_GAS_RADAR_MIN_BUYS=5
+ETH_GAS_RADAR_MIN_BUYERS=3
+ETH_GAS_RADAR_TX_LIMIT=160
 ```
 
-If `ETH_RPC_URL` is configured, the radar can attach block-level evidence for private watch-wallet buy transactions. Keep this optional; the monitor must still run without RPC.
+If `ETH_RPC_URL` is configured, the radar can attach block-level evidence for private watch-wallet buy transactions and enable Gas Radar. Keep RPC optional; the monitor must still run without RPC.
 
 For replay:
 
@@ -287,39 +296,26 @@ npm run review:eth-signals
 
 `npm run test:eth-meme` runs an offline self-test for grading and Telegram formatting. `npm run review:eth-signals` reads `data/eth_meme_signal_journal.ndjson` and summarizes emitted alerts by grade, lifecycle stage, and source combo. Treat this as the first step toward hit-rate feedback; it does not yet calculate future price performance.
 
-## Product Direction
+## Practical Upgrade Direction
 
-When improving this skill, prioritize these upgrade paths:
+The useful upgrade path is not more abstract scoring language; it is earlier discovery of ETH meme tokens that people are actively buying.
 
-1. **Signal grading**
-   - Add stages such as `setup`, `confirm`, `late`, and `avoid`
-   - A buy signal from two wallets is not equally useful at all market phases
+Prioritize:
 
-2. **Wallet clusters**
-   - Track wallets as groups with recurring co-buy behavior
-   - A wallet that repeatedly co-buys with other trusted wallets matters more than a single isolated wallet
+- Gas-aware discovery: when mainnet gas suddenly rises, scan recent DEX router transactions and find repeated non-base ERC20 buys.
+- Cross-source confirmation: promote a token when Gas Radar overlaps with OKX Signal, hot-token volume, or the user's private ETH watch list.
+- Cleaner alerts: keep Telegram to name, contract, market cap, smart-money amount, price, holders, and one practical remark.
+- Feedback loop: keep writing emitted alerts to `data/eth_meme_signal_journal.ndjson`, then use later price replay to learn which sources actually worked.
+- Safer defaults: do not alert `avoid` signals, avoid late/overheated tokens by default, and keep execution out of scope unless the user separately requests it.
 
-3. **Token lifecycle awareness**
-   - Early launch, post-migration, spike, distribution, and decay should not use the same rule
-
-4. **Historical hit-rate learning**
-   - Which group worked
-   - Which time window worked
-   - Which market cap band worked
-   - Which signals were just noise
-
-5. **Short explanation layer**
-   - Keep Telegram cards compact
-   - Add one line that explains why the alert exists
-   - Avoid flooding the user with raw fields
-
-Third-party market data sources are optional enhancers. The baseline workflow should still be useful with:
+The baseline workflow should still be useful with:
 
 - wallet import
 - OKX profile generation
 - group generation
 - Telegram alerts from the safe pool
 - OKX official Signal forwarding when enabled
+- ETH Gas Radar when an ETH RPC endpoint is configured
 
 ### 7. OKX API setup
 

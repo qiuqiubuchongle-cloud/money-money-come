@@ -51,6 +51,38 @@ const ethRpcUrl = process.env.ETH_RPC_URL || "";
 const blockTrackingEnabled = envBool("ETH_BLOCK_TRACKING_ENABLED", Boolean(ethRpcUrl));
 const blockCacheMs = envNumber("ETH_BLOCK_CACHE_MS", 12_000);
 const ethMemeSelfTest = envBool("ETH_MEME_SELF_TEST", false);
+const gasRadarEnabled = envBool("ETH_GAS_RADAR_ENABLED", Boolean(ethRpcUrl));
+const gasRadarMinGwei = envNumber("ETH_GAS_RADAR_MIN_GWEI", 20);
+const gasRadarSpikeMultiplier = envNumber("ETH_GAS_RADAR_SPIKE_MULTIPLIER", 1.6);
+const gasRadarBlocks = envNumber("ETH_GAS_RADAR_BLOCKS", 3);
+const gasRadarMinBuys = envNumber("ETH_GAS_RADAR_MIN_BUYS", 5);
+const gasRadarMinBuyers = envNumber("ETH_GAS_RADAR_MIN_BUYERS", 3);
+const gasRadarCooldownMs = envNumber("ETH_GAS_RADAR_COOLDOWN_MS", 15 * 60_000);
+const gasRadarTxLimit = envNumber("ETH_GAS_RADAR_TX_LIMIT", 160);
+const gasRadarProtocolAddresses = new Set(String(process.env.ETH_GAS_RADAR_PROTOCOL_ADDRESSES || [
+  "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+  "0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45",
+  "0xe592427a0aece92de3edee1f18e0157c05861564",
+  "0x1111111254eeb25477b68fb85ed929f73a960582",
+  "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+  "0x881d40237659c251811cec9c364ef91dc08d300c",
+].join(","))
+  .split(",")
+  .map((row) => row.trim().toLowerCase())
+  .filter(Boolean));
+const ignoredTokenAddresses = new Set(String(process.env.ETH_GAS_RADAR_IGNORE_TOKENS || [
+  "0x0000000000000000000000000000000000000000",
+  "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  "0xdac17f958d2ee523a2206206994597c13d831ec7",
+  "0x6b175474e89094c44da98b954eedeac495271d0f",
+  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+  "0x514910771af9ca656af840dff83e8264ecf986ca",
+].join(","))
+  .split(",")
+  .map((row) => row.trim().toLowerCase())
+  .filter(Boolean));
 
 let state = loadJson(statePath, {
   seeded: false,
@@ -68,6 +100,8 @@ let state = loadJson(statePath, {
   walletClusters: {},
   blockCache: {},
   txReceiptCache: {},
+  gasSamples: [],
+  seenGasRadarKeys: [],
 });
 
 function envNumber(name, fallback) {
@@ -120,6 +154,11 @@ function appendJournal(events) {
     amountUsd: event.amountUsd,
     triggerWalletCount: event.triggerWalletCount,
     triggerWallets: event.triggerWallets,
+    routeTxCount: event.routeTxCount,
+    gasGwei: event.gasGwei,
+    blockNumbers: event.blockNumbers,
+    txHashes: event.txHashes,
+    buyers: event.buyers,
     cluster: event.cluster,
     blockInfo: event.blockInfo,
     verdict: event.verdict,
@@ -283,6 +322,17 @@ function fmtWindow(ms) {
   return `${(n / 3_600_000).toFixed(1)}h`;
 }
 
+function weiHexToGwei(value) {
+  const n = hexToNumber(value);
+  return n === undefined ? undefined : n / 1e9;
+}
+
+function topicAddress(topic) {
+  const text = String(topic || "").toLowerCase();
+  if (!text.startsWith("0x") || text.length < 66) return "";
+  return `0x${text.slice(-40)}`;
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -311,18 +361,22 @@ function txBlockInfo(txHash) {
   if (!blockTrackingEnabled || !txHash) return null;
   const hash = String(txHash).toLowerCase();
   const cached = state.txReceiptCache?.[hash];
-  if (cached && Date.now() - Number(cached.at || 0) < blockCacheMs) return cached.info;
+  if (cached?.info && Date.now() - Number(cached.at || 0) < blockCacheMs) return cached.info;
 
-  const receipt = rpc("eth_getTransactionReceipt", [hash]);
-  if (!receipt.ok || !receipt.data) return null;
-  const blockNumber = hexToNumber(receipt.data.blockNumber);
+  let receiptData = cached?.receipt;
+  if (!receiptData) {
+    const receipt = rpc("eth_getTransactionReceipt", [hash]);
+    if (!receipt.ok || !receipt.data) return null;
+    receiptData = receipt.data;
+  }
+  const blockNumber = hexToNumber(receiptData.blockNumber);
   if (!blockNumber) return null;
 
   state.blockCache = state.blockCache || {};
   const blockKey = String(blockNumber);
   let block = state.blockCache[blockKey];
   if (!block || Date.now() - Number(block.at || 0) > blockCacheMs) {
-    const blockResp = rpc("eth_getBlockByNumber", [receipt.data.blockNumber, false]);
+    const blockResp = rpc("eth_getBlockByNumber", [receiptData.blockNumber, false]);
     if (blockResp.ok && blockResp.data) {
       block = {
         at: Date.now(),
@@ -338,11 +392,11 @@ function txBlockInfo(txHash) {
     blockNumber,
     blockTimestamp: block?.timestamp,
     blockTxCount: block?.txCount,
-    txIndex: hexToNumber(receipt.data.transactionIndex),
-    gasUsed: hexToNumber(receipt.data.gasUsed),
+    txIndex: hexToNumber(receiptData.transactionIndex),
+    gasUsed: hexToNumber(receiptData.gasUsed),
   };
   state.txReceiptCache = state.txReceiptCache || {};
-  state.txReceiptCache[hash] = { at: Date.now(), info };
+  state.txReceiptCache[hash] = { at: Date.now(), receipt: receiptData, info };
   return info;
 }
 
@@ -739,6 +793,128 @@ function hotTokenEvents() {
   return events;
 }
 
+function currentGasGwei() {
+  const resp = rpc("eth_gasPrice", [], 8_000);
+  if (!resp.ok) {
+    console.error(`[eth-gas-radar] gasPrice ${resp.error || "unknown rpc error"}`);
+    return undefined;
+  }
+  return weiHexToGwei(resp.data);
+}
+
+function gasIsHot(gasGwei) {
+  if (!Number.isFinite(gasGwei)) return false;
+  state.gasSamples = Array.isArray(state.gasSamples) ? state.gasSamples : [];
+  const now = Date.now();
+  const recent = state.gasSamples.filter((row) => now - Number(row.at || 0) <= 30 * 60_000).slice(-60);
+  const avg = recent.length
+    ? recent.reduce((sum, row) => sum + Number(row.gwei || 0), 0) / recent.length
+    : gasGwei;
+  state.gasSamples = [...recent, { at: now, gwei: gasGwei }].slice(-90);
+  return gasGwei >= gasRadarMinGwei || (avg > 0 && gasGwei >= avg * gasRadarSpikeMultiplier);
+}
+
+function txReceipt(txHash) {
+  if (!txHash) return null;
+  const hash = String(txHash).toLowerCase();
+  const cached = state.txReceiptCache?.[hash];
+  if (cached && Date.now() - Number(cached.at || 0) < 10 * 60_000) return cached.receipt || cached.info || null;
+  const receipt = rpc("eth_getTransactionReceipt", [hash], 10_000);
+  if (!receipt.ok || !receipt.data) return null;
+  state.txReceiptCache = state.txReceiptCache || {};
+  state.txReceiptCache[hash] = { at: Date.now(), receipt: receipt.data };
+  return receipt.data;
+}
+
+function blockWithTransactions(blockNumber) {
+  const hex = `0x${Number(blockNumber).toString(16)}`;
+  const resp = rpc("eth_getBlockByNumber", [hex, true], 12_000);
+  if (!resp.ok || !resp.data) return null;
+  return resp.data;
+}
+
+function gasRadarEvents() {
+  if (!gasRadarEnabled || !ethRpcUrl) return [];
+  const gasGwei = currentGasGwei();
+  if (!gasIsHot(gasGwei)) return [];
+
+  const blockResp = rpc("eth_blockNumber", [], 8_000);
+  const latest = hexToNumber(blockResp.data);
+  if (!blockResp.ok || !latest) return [];
+
+  const stats = new Map();
+  let scannedTx = 0;
+  for (let blockNumber = latest - 1; blockNumber >= Math.max(0, latest - gasRadarBlocks); blockNumber -= 1) {
+    const block = blockWithTransactions(blockNumber);
+    const txs = Array.isArray(block?.transactions) ? block.transactions : [];
+    for (const tx of txs) {
+      if (scannedTx >= gasRadarTxLimit) break;
+      const to = String(tx.to || "").toLowerCase();
+      if (!gasRadarProtocolAddresses.has(to)) continue;
+      scannedTx += 1;
+      const receipt = txReceipt(tx.hash);
+      if (!receipt || String(receipt.status || "0x1") === "0x0") continue;
+      const user = String(tx.from || "").toLowerCase();
+      for (const log of receipt.logs || []) {
+        const topics = Array.isArray(log.topics) ? log.topics : [];
+        if (String(topics[0] || "").toLowerCase() !== "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef") continue;
+        const token = tokenKey(log.address);
+        if (!token || ignoredTokenAddresses.has(token)) continue;
+        const toAddress = topicAddress(topics[2]);
+        if (toAddress && toAddress !== user) continue;
+        const row = stats.get(token) || {
+          source: "gas_radar",
+          token,
+          signalTime: Date.now(),
+          gasGwei,
+          routeTxCount: 0,
+          buyers: new Set(),
+          txHashes: new Set(),
+          blockNumbers: new Set(),
+        };
+        row.routeTxCount += 1;
+        row.buyers.add(user);
+        row.txHashes.add(String(tx.hash || "").toLowerCase());
+        row.blockNumbers.add(blockNumber);
+        stats.set(token, row);
+      }
+    }
+    if (scannedTx >= gasRadarTxLimit) break;
+  }
+
+  const events = [];
+  for (const row of stats.values()) {
+    const buyerCount = row.buyers.size;
+    if (row.routeTxCount < gasRadarMinBuys || buyerCount < gasRadarMinBuyers) continue;
+    const seenKey = `eth-gas:${row.token}:${Math.floor(Date.now() / gasRadarCooldownMs)}`;
+    if (!state.seeded) {
+      uniqPush(state, "seenGasRadarKeys", seenKey, 5000);
+      continue;
+    }
+    if (!uniqPush(state, "seenGasRadarKeys", seenKey, 5000)) continue;
+    const info = tokenPriceInfo(row.token) || {};
+    events.push({
+      ...row,
+      buyers: [...row.buyers],
+      txHashes: [...row.txHashes].slice(0, 5),
+      blockNumbers: [...row.blockNumbers],
+      triggerWalletCount: buyerCount,
+      triggerWallets: [...row.buyers],
+      symbol: info.raw?.symbol || "UNKNOWN",
+      name: info.raw?.name || info.raw?.symbol || "UNKNOWN",
+      entryPrice: info.price,
+      marketCapUsd: info.marketCapUsd,
+      liquidityUsd: info.liquidityUsd,
+      holders: info.holders,
+      volume5mUsd: info.volume5mUsd,
+      txs5m: info.txs5m,
+      priceChange5mPct: info.priceChange5mPct,
+      priceChange1hPct: info.priceChange1hPct,
+    });
+  }
+  return events;
+}
+
 function rememberRecent(bucket, event) {
   const token = tokenKey(event.token);
   if (!token) return;
@@ -794,6 +970,11 @@ function combineEvents(events) {
     item.txs1h = Math.max(Number(item.txs1h || 0), Number(rawEvent.txs1h || 0));
     item.volumeSpikeRatio = Math.max(Number(item.volumeSpikeRatio || 0), Number(rawEvent.volumeSpikeRatio || 0));
     item.volumeDeltaUsd = Math.max(Number(item.volumeDeltaUsd || 0), Number(rawEvent.volumeDeltaUsd || 0));
+    item.routeTxCount = Math.max(Number(item.routeTxCount || 0), Number(rawEvent.routeTxCount || 0));
+    item.gasGwei = Math.max(Number(item.gasGwei || 0), Number(rawEvent.gasGwei || 0));
+    item.blockNumbers = [...new Set([...(item.blockNumbers || []), ...(rawEvent.blockNumbers || [])])];
+    item.txHashes = [...new Set([...(item.txHashes || []), ...(rawEvent.txHashes || [])])].slice(0, 10);
+    item.buyers = [...new Set([...(item.buyers || []), ...(rawEvent.buyers || [])])].slice(0, 50);
     item.amountUsd += Number(rawEvent.amountUsd || 0);
     item.soldRatioPercent = rawEvent.soldRatioPercent ?? item.soldRatioPercent;
     item.walletTypeLabel = rawEvent.walletTypeLabel || item.walletTypeLabel;
@@ -865,6 +1046,7 @@ function compositeScore(event, sources) {
   if (sources.includes("okx_signal")) score += 2;
   if (sources.includes("volume_spike")) score += 2;
   if (sources.includes("private_pool")) score += 2;
+  if (sources.includes("gas_radar")) score += 3;
   if (event.lifecycleStage === "early") score += 1;
   if (event.lifecycleStage === "confirming") score += 1;
   if (event.lifecycleStage === "late") score -= 2;
@@ -877,6 +1059,8 @@ function compositeScore(event, sources) {
   if (volume5m >= minVolume5mUsd) score += 1;
   if (volume5m >= minVolume5mUsd * 3) score += 1;
   if (txs5m >= minTxs5m) score += 1;
+  if (Number(event.routeTxCount || 0) >= gasRadarMinBuys) score += 1;
+  if (Number(event.triggerWalletCount || 0) >= gasRadarMinBuyers) score += 1;
   if (liquidity >= minMemeLiquidityUsd) score += 1;
   if (holders >= minMemeHolders) score += 1;
   if (mc && mc > maxMemeMarketCapUsd) score -= 2;
@@ -976,11 +1160,17 @@ function signalGrade(event) {
     && Number(event.compositeScore || 0) >= minCompositeScore
   ) return "confirm";
   if (
+    event.sources.includes("gas_radar")
+    && (event.sources.includes("okx_signal") || event.sources.includes("volume_spike") || event.sources.includes("private_pool"))
+    && Number(event.compositeScore || 0) >= minCompositeScore
+  ) return "confirm";
+  if (
     event.sources.includes("private_pool")
     && Number(event.cluster?.clusterScore || 0) >= 2
     && Number(event.compositeScore || 0) >= minCompositeScore
   ) return "confirm";
   if (event.sources.includes("private_pool")) return "setup";
+  if (event.sources.includes("gas_radar")) return "setup";
   if (event.sources.includes("okx_signal") && event.sources.includes("volume_spike")) return "confirm";
   if (event.sources.includes("okx_signal") || event.sources.includes("volume_spike")) return "setup";
   return "setup";
@@ -998,11 +1188,13 @@ function gradeLabel(grade) {
 function verdict(event) {
   if (event.signalGrade === "confirm") {
     if (event.sources.includes("private_pool") && event.sources.includes("okx_signal")) return "私有地址池与 OKX Signal 同时出现，优先复核。";
+    if (event.sources.includes("gas_radar")) return "Gas 升高时 DEX 路由集中买入，优先复核。";
     if (event.sources.includes("private_pool")) return "观察地址同币共振，属于可复盘信号。";
     return "官方信号与成交量同步，值得看一眼。";
   }
   if (event.signalGrade === "setup") {
     if (event.sources.includes("private_pool")) return "观察地址出现首买共振，但还需要市场确认。";
+    if (event.sources.includes("gas_radar")) return "Gas 升高时被多笔路由交易买入，先观察后续承接。";
     return "信号刚出现，先观察流动性和后续买盘。";
   }
   if (event.signalGrade === "late") return "信号偏后排，只适合复盘，不适合追急。";
@@ -1014,6 +1206,7 @@ function shouldAlert(event) {
   if (event.signalGrade === "late" && !alertLateSignals) return false;
   if (Number(event.riskScore || 0) > maxRiskScore) return false;
   if (event.sources.includes("private_pool")) return true;
+  if (event.sources.includes("gas_radar")) return event.compositeScore >= Math.max(3, minCompositeScore - 1);
   if (event.sources.includes("okx_signal")) return okxSignalForwardOnly || event.compositeScore >= 3;
   if (event.sources.includes("volume_spike") && event.compositeScore < minCompositeScore) return false;
   const mc = Number(event.marketCapUsd || 0);
@@ -1037,6 +1230,7 @@ function sourceLabel(sources) {
     okx_signal: "OKX Signal 聪明钱聚合",
     volume_spike: "成交量突增",
     private_pool: "ETH 观察地址买入",
+    gas_radar: "Gas 异动路由买入",
   };
   return sources.map((source) => labels[source] || source).join(" + ");
 }
@@ -1066,6 +1260,7 @@ function telegramMessage(event) {
       `风险：${event.riskScore || 0}${event.riskReasons?.length ? `（${escapeHtml(event.riskReasons.slice(0, 3).join("、"))}）` : ""}`,
       event.cluster?.knownPairCount ? `集群：${event.cluster.knownPairCount}/${event.cluster.pairCount} 已知同买关系` : "",
       event.blockInfo?.blockNumber ? `区块：${event.blockInfo.blockNumber}` : "",
+      event.gasGwei ? `Gas：${Number(event.gasGwei).toFixed(2)} gwei ｜ 路由买入：${event.routeTxCount || 0}` : "",
     ] : []),
     "",
     `⚠️ 仅供观察，不构成买入建议。`,
@@ -1118,12 +1313,13 @@ async function main() {
     console.log(JSON.stringify(result, null, 2));
     return;
   }
-  console.log(`[eth-meme] radar started. poll=${pollMs}ms, okxSignal=${okxSignalEnabled ? `on(minWallets=${okxSignalMinWallets}, minAmount=${fmtUsd(okxSignalMinAmountUsd)})` : "off"}, hotTokens=${hotTokensEnabled ? `on(volume5m>=${fmtUsd(minVolume5mUsd)}, txs5m>=${minTxs5m}, spike>=${volumeSpikeMultiplier}x)` : "off"}, private=${privateTrackerEnabled ? `on(minWallets=${privateMinWallets}, window=${privateWindowMs}ms)` : "off"}`);
+  console.log(`[eth-meme] radar started. poll=${pollMs}ms, okxSignal=${okxSignalEnabled ? `on(minWallets=${okxSignalMinWallets}, minAmount=${fmtUsd(okxSignalMinAmountUsd)})` : "off"}, hotTokens=${hotTokensEnabled ? `on(volume5m>=${fmtUsd(minVolume5mUsd)}, txs5m>=${minTxs5m}, spike>=${volumeSpikeMultiplier}x)` : "off"}, private=${privateTrackerEnabled ? `on(minWallets=${privateMinWallets}, window=${privateWindowMs}ms)` : "off"}, gasRadar=${gasRadarEnabled && ethRpcUrl ? `on(minGwei=${gasRadarMinGwei}, spike>=${gasRadarSpikeMultiplier}x, blocks=${gasRadarBlocks}, buys>=${gasRadarMinBuys}, buyers>=${gasRadarMinBuyers})` : "off"}`);
   while (true) {
     const rawEvents = [
       ...okxSignalEvents(),
       ...privatePoolEvents(),
       ...hotTokenEvents(),
+      ...gasRadarEvents(),
     ];
     if (!state.seeded) {
       state.seeded = true;

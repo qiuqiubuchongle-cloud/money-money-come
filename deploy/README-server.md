@@ -7,13 +7,14 @@
 当前有两类监控器：
 
 - BSC 分组监控：基于 `safeSignalPool` 和同组集中买入规则
-- ETH Meme 雷达：合并 OKX Signal、ETH hot-token 放量、私有 ETH 观察地址首买共振
+- ETH Meme 雷达：合并 OKX Signal、ETH hot-token 放量、私有 ETH 观察地址首买共振、Gas 异动路由买入
 
 | 通道 | 作用 | 默认状态 |
 | --- | --- | --- |
 | 私有聪明钱地址池 | 监控你自己筛选出的 `safeSignalPool`，当同组核心地址集中买入时提醒 | 开启 |
 | OKX 官方 Signal | 读取 OKX 聚合聪明钱 / KOL / 鲸鱼 Signal，原样转发到 TG，并追加备注 | 开启 |
 | ETH Meme 雷达 | 给 ETH meme 信号做分级、生命周期、风险分和钱包集群解释 | 可独立开启 |
+| ETH Gas Radar | 主网 gas 升高时扫描最近区块 DEX 路由交易，找出被集中买入的非基础资产 token | 配置 `ETH_RPC_URL` 后开启 |
 
 第三方市场数据源是可选增强源。首次部署建议先保持关闭，等私有地址池和 OKX 官方 Signal 转发跑稳定后再接入。
 
@@ -123,6 +124,13 @@ ETH_MEME_ALERT_LATE_SIGNALS=0
 ETH_TG_INCLUDE_DIAGNOSTICS=0
 ETH_RPC_URL=
 ETH_BLOCK_TRACKING_ENABLED=0
+ETH_GAS_RADAR_ENABLED=1
+ETH_GAS_RADAR_MIN_GWEI=20
+ETH_GAS_RADAR_SPIKE_MULTIPLIER=1.6
+ETH_GAS_RADAR_BLOCKS=3
+ETH_GAS_RADAR_MIN_BUYS=5
+ETH_GAS_RADAR_MIN_BUYERS=3
+ETH_GAS_RADAR_TX_LIMIT=160
 ```
 
 ETH 雷达会把信号分成：
@@ -143,6 +151,21 @@ ETH_PRIVATE_TRACKER_ENABLED=1
 ETH_PRIVATE_MIN_WALLETS=2
 ETH_PRIVATE_WINDOW_MS=300000
 ```
+
+如果你想监测“ETH gas 变贵时，大家正在抢什么 meme”，配置为：
+
+```bash
+ETH_RPC_URL=https://your-ethereum-rpc
+ETH_GAS_RADAR_ENABLED=1
+ETH_GAS_RADAR_MIN_GWEI=20
+ETH_GAS_RADAR_SPIKE_MULTIPLIER=1.6
+ETH_GAS_RADAR_BLOCKS=3
+ETH_GAS_RADAR_MIN_BUYS=5
+ETH_GAS_RADAR_MIN_BUYERS=3
+ETH_GAS_RADAR_TX_LIMIT=160
+```
+
+这条通道不会全量扫链，只有 gas 超过阈值或相对最近均值明显上升时才会看最近区块。它会过滤 WETH、USDC、USDT、DAI、WBTC 等基础资产，只统计 DEX 路由交易里用户实际收到的非基础 ERC20 token。默认要求同一 token 至少 5 笔路由买入、3 个不同买家，并且同一 token 15 分钟冷却。Gas Radar 单独命中会作为观察信号；如果同时被 OKX Signal、hot-token 放量或你的私有观察地址池命中，会升级为更优先的确认信号。
 
 ## 1. 拉取仓库
 
@@ -284,6 +307,13 @@ npm run review:eth-signals
 
 - `data/eth_meme_signal_journal.ndjson`：逐条信号日志
 - `data/eth_meme_signal_review.json`：按分级、生命周期、来源组合聚合的复盘结果
+
+Gas Radar 命中的信号会额外写入：
+
+- `routeTxCount`：近期 DEX 路由买入笔数
+- `gasGwei`：触发扫描时的主网 gas
+- `blockNumbers`：扫描命中的区块号
+- `txHashes`：样本交易哈希
 
 ## Telegram 信号格式
 
