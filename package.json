@@ -19,6 +19,7 @@
     "monitor": "node scripts/monitor_bsc_signals.mjs",
     "monitor:eth-meme": "node scripts/monitor_eth_meme_radar.mjs",
     "review:eth-signals": "node scripts/review_eth_signal_journal.mjs",
+    "brief:daily": "node scripts/daily_alpha_brief.mjs",
     "test:eth-meme": "ETH_MEME_SELF_TEST=1 node scripts/monitor_eth_meme_radar.mjs",
     "telegram-bridge": "node scripts/telegram_bridge.mjs"
   }

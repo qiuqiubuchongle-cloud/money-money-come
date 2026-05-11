@@ -131,6 +131,10 @@ ETH_GAS_RADAR_BLOCKS=3
 ETH_GAS_RADAR_MIN_BUYS=5
 ETH_GAS_RADAR_MIN_BUYERS=3
 ETH_GAS_RADAR_TX_LIMIT=160
+ALPHA_BRIEF_LOOKBACK_HOURS=24
+ALPHA_BRIEF_PREVIOUS_HOURS=24
+ALPHA_BRIEF_TOP_LIMIT=5
+ALPHA_BRIEF_SEND_TG=1
 ```
 
 ETH 雷达会把信号分成：
@@ -301,6 +305,7 @@ tail -f logs/eth-meme-radar.err.log
 
 ```bash
 npm run review:eth-signals
+npm run brief:daily
 ```
 
 输出文件：
@@ -314,6 +319,44 @@ Gas Radar 命中的信号会额外写入：
 - `gasGwei`：触发扫描时的主网 gas
 - `blockNumbers`：扫描命中的区块号
 - `txHashes`：样本交易哈希
+
+## 7. Daily Alpha Brief 定时日报
+
+日报从 `data/eth_meme_signal_journal.ndjson` 读取最近信号，生成：
+
+- 今日 ETH gas 异动买入 top token
+- 私有地址池共振 token
+- OKX Signal 与 hot-token 重叠 token
+- 昨日信号结构表现
+- 最近可能失效的规则
+
+手动运行：
+
+```bash
+npm run brief:daily
+```
+
+安装 systemd timer：
+
+```bash
+sudo cp deploy/money-money-come-brief.service /etc/systemd/system/money-money-come-brief.service
+sudo cp deploy/money-money-come-brief.timer /etc/systemd/system/money-money-come-brief.timer
+sudo systemctl daemon-reload
+sudo systemctl enable money-money-come-brief.timer
+sudo systemctl start money-money-come-brief.timer
+```
+
+查看定时器和日志：
+
+```bash
+systemctl list-timers money-money-come-brief.timer
+tail -f logs/daily-alpha-brief.log
+tail -f logs/daily-alpha-brief.err.log
+```
+
+默认每天服务器时间 09:00 运行一次。若 `ALPHA_BRIEF_SEND_TG=1`，会发送到同一个 Telegram chat。
+
+注意：日报当前优先做“结构复盘”。如果 journal 里还没有后验价格字段，它不会虚构命中率，只会提示暂无价格回放数据。
 
 ## Telegram 信号格式
 

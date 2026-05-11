@@ -1,0 +1,13 @@
+[Unit]
+Description=Money Money Come daily alpha brief
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/money-money-come
+EnvironmentFile=/opt/money-money-come/deploy/server.env
+Environment=PATH=/root/.local/bin:/root/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env node scripts/daily_alpha_brief.mjs
+StandardOutput=append:/opt/money-money-come/logs/daily-alpha-brief.log
+StandardError=append:/opt/money-money-come/logs/daily-alpha-brief.err.log

@@ -29,6 +29,7 @@ It should behave like a signal interpretation layer, not a raw signal relay. It 
 - Turning raw wallet activity into a small set of explainable, high-signal alerts
 - Running ETH meme radar with OKX Signal + hot-token volume + private watch-wallet first buys
 - Reviewing emitted ETH signal journal rows to learn which source combos and stages are noisy
+- Generating a Daily Alpha Brief from emitted ETH journal rows
 
 ## Safety Defaults
 
@@ -55,6 +56,7 @@ It should behave like a signal interpretation layer, not a raw signal relay. It 
 - Existing monitor pipeline: `scripts/monitor_bsc_signals.mjs`
 - ETH meme radar: `scripts/monitor_eth_meme_radar.mjs`
 - ETH signal journal review: `scripts/review_eth_signal_journal.mjs`
+- Daily Alpha Brief: `scripts/daily_alpha_brief.mjs`
 - Signal rule template: `config/signal-rules.example.json`
 - Setup checklist: `references/setup-checklist.md`
 
@@ -295,6 +297,23 @@ npm run review:eth-signals
 ```
 
 `npm run test:eth-meme` runs an offline self-test for grading and Telegram formatting. `npm run review:eth-signals` reads `data/eth_meme_signal_journal.ndjson` and summarizes emitted alerts by grade, lifecycle stage, and source combo. Treat this as the first step toward hit-rate feedback; it does not yet calculate future price performance.
+
+For daily brief:
+
+```bash
+npm run brief:daily
+ALPHA_BRIEF_SEND_TG=1 npm run brief:daily
+```
+
+The brief reads emitted ETH journal rows and summarizes:
+
+- ETH Gas Radar top tokens
+- private watch-wallet co-buy tokens
+- OKX Signal + hot-token overlaps
+- previous-window signal structure
+- rules that may be too noisy or too strict
+
+It must not claim hit rate unless replay/performance fields exist in journal rows. Without later price replay, describe the section as signal-structure review only.
 
 ## Practical Upgrade Direction
 

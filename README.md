@@ -249,6 +249,38 @@ npm run review:eth-signals
 
 如果配置 `ETH_RPC_URL`，雷达会额外记录私有观察地址首买所在区块，并启用 Gas Radar 扫描最近 ETH 区块，方便把 Telegram 信号和区块浏览器证据对上。
 
+### 7. Daily Alpha Brief
+
+实时提醒解决“现在有没有动静”，日报解决“今天到底有没有东西值得复盘”。
+
+Daily Alpha Brief 会读取 `data/eth_meme_signal_journal.ndjson`，每天生成一份简短复盘：
+
+- 今日 ETH Gas 异动买入 Top Token
+- 私有地址池共振 Token
+- OKX Signal 与 Hot Token 重叠 Token
+- 昨日信号结构表现
+- 最近可能失效的规则
+
+运行：
+
+```bash
+npm run brief:daily
+```
+
+发送到 Telegram：
+
+```bash
+ALPHA_BRIEF_SEND_TG=1 npm run brief:daily
+```
+
+输出文件：
+
+```text
+data/daily_alpha_brief.md
+```
+
+需要说明：当前日报会诚实区分“结构复盘”和“命中率复盘”。如果还没有接入 15m / 1h / 6h 后验价格回放，它不会假装统计胜率，只会提示样本不足。
+
 ## 自定义配置：你决定什么叫信号
 
 复制规则模板：
@@ -491,6 +523,7 @@ ETH 雷达：
 ```bash
 npm run monitor:eth-meme
 npm run review:eth-signals
+npm run brief:daily
 ```
 
 详细部署见 [`deploy/README-server.md`](./deploy/README-server.md)。

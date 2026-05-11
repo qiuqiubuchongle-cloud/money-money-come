@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Money Money Come daily alpha brief
+
+[Timer]
+OnCalendar=*-*-* 09:00:00
+Persistent=true
+Unit=money-money-come-brief.service
+
+[Install]
+WantedBy=timers.target
